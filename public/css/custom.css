@@ -1,0 +1,65 @@
+body {
+  background-color: #f0f2f5;
+  font-family: 'Segoe UI', sans-serif;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 16px;
+padding: 10px;
+}
+
+.card-login {
+  width: 100%;
+  max-width: 400px;
+  padding: 2rem;
+  border-radius: 12px;
+  box-shadow: 0 0 25px rgba(0, 0, 0, 0.1);
+  background-color: white;
+}
+
+.card-login h2 {
+  text-align: center;
+  color: #004080;
+  margin-bottom: 1.5rem;
+  font-weight: bold;
+}
+
+.form-control {
+  border-radius: 8px;
+}
+
+.btn-login {
+  background-color: #004080;
+  color: white;
+  border-radius: 8px;
+  font-weight: 500;
+}
+
+.btn-login:hover {
+  background-color: #0066cc;
+}
+
+.error-box {
+  background-color: #f8d7da;
+  color: #842029;
+  padding: .75rem;
+  border-radius: 6px;
+  margin-bottom: 1rem;
+  text-align: center;
+}
+
+.toggle-password {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  cursor: pointer;
+}
+
+@media (min-width: 768px) {
+  body {
+  font-size: 18px;
+  padding: 20px;
+  }
+}
