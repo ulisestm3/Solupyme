@@ -38,6 +38,7 @@ switch ($_SESSION['idrol']) {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background-color: #f4f6f85c;
             color: #333;
+            font-size: 14px; /* Tamaño base más pequeño */
         }
 
         .container {
@@ -47,25 +48,26 @@ switch ($_SESSION['idrol']) {
 
         /* Sidebar */
         .sidebar {
-            width: 250px;
+            width: 180px; /* Más pequeño */
             background-color: #322757ff;
             color: white;
             display: flex;
             flex-direction: column;
-            padding: 1.5rem 1rem;
+            padding: 1rem 0.8rem; /* Menos padding */
+            font-size: 13px;
         }
         .sidebar h2 {
-            font-size: 1.5rem;
-            margin-bottom: 2rem;
+            font-size: 1.25rem;
+            margin-bottom: 1.5rem;
             text-align: center;
             font-weight: bold;
         }
         .sidebar nav a {
             color: white;
             text-decoration: none;
-            padding: 0.8rem 1rem;
+            padding: 0.5rem 0.8rem; /* Más compacto */
             border-radius: 6px;
-            margin-bottom: 0.5rem;
+            margin-bottom: 0.35rem;
             display: block;
             transition: background-color 0.3s ease;
         }
@@ -75,12 +77,13 @@ switch ($_SESSION['idrol']) {
         .sidebar .logout-btn {
             margin-top: auto;
             background-color: #5596ebff;
-            padding: 0.8rem 1rem;
+            padding: 0.5rem 0.8rem;
             border-radius: 6px;
             text-align: center;
             font-weight: bold;
             cursor: pointer;
             transition: background-color 0.3s ease;
+            font-size: 13px;
         }
         .sidebar .logout-btn:hover {
             background-color: #a3ad4cff;
@@ -89,30 +92,34 @@ switch ($_SESSION['idrol']) {
         /* Main content */
         .main-content {
             flex: 1;
-            padding: 2rem 3rem;
+            padding: 1rem 1.5rem; /* Menos padding */
             overflow-y: auto;
+            font-size: 14px;
         }
         .main-content h1 {
             color: #004080;
             margin-bottom: 1rem;
+            font-size: 1.4rem;
         }
         .welcome-message {
-            font-size: 1.1rem;
-            margin-bottom: 2rem;
-            padding: 1rem 1.5rem;
+            font-size: 1rem;
+            margin-bottom: 1.5rem;
+            padding: 0.7rem 1rem;
             background-color: #dbeafe;
             border-left: 5px solid #3b82f6;
             border-radius: 4px;
+            line-height: 1.3;
         }
 
         section {
-            margin-bottom: 2.5rem;
+            margin-bottom: 1.5rem;
         }
         section h2 {
             color: #004080;
-            margin-bottom: 0.75rem;
+            margin-bottom: 0.5rem;
             border-bottom: 2px solid #0066cc;
             padding-bottom: 0.25rem;
+            font-size: 1.1rem;
         }
         section ul {
             list-style: none;
@@ -122,7 +129,8 @@ switch ($_SESSION['idrol']) {
             color: #1e40af;
             font-weight: 600;
             display: inline-block;
-            margin-bottom: 0.5rem;
+            margin-bottom: 0.35rem;
+            font-size: 13px;
             transition: color 0.3s ease;
         }
         section ul li a:hover {
@@ -133,21 +141,23 @@ switch ($_SESSION['idrol']) {
             background: none;
             border: none;
             color: white;
-            font-size: 1.5rem;
+            font-size: 1.3rem; /* Más pequeño */
             cursor: pointer;
             margin-bottom: 1rem;
             align-self: flex-start;
+            padding-left: 0.3rem;
         }
 
         .accordion-btn {
             background: none;
             border: none;
             color: white;
-            padding: 0.5rem 1rem;
+            padding: 0.4rem 0.8rem;
             width: 100%;
             text-align: left;
-            font-size: 1rem;
+            font-size: 0.9rem;
             cursor: pointer;
+            margin-bottom: 0.1rem;
         }
 
         .accordion-btn:hover {
@@ -157,14 +167,15 @@ switch ($_SESSION['idrol']) {
         .accordion-panel {
             display: none;
             padding-left: 1rem;
-            margin-top: 0.5rem;
+            margin-top: 0.3rem;
+            font-size: 13px;
         }
 
         .accordion-panel a {
             display: block;
             color: #ecf0f1;
             text-decoration: none;
-            padding: 0.25rem 0;
+            padding: 0.2rem 0;
         }
 
         .accordion-panel a:hover {
@@ -173,14 +184,14 @@ switch ($_SESSION['idrol']) {
 
         .main-content {
             flex-grow: 1;
-            padding: 2rem;
+            padding: 1rem 1.5rem;
             transition: margin 0.3s ease;
         }
 
         /* Sidebar colapsada */
         .sidebar.collapsed {
-            width: 60px;
-            padding: 1rem 0.5rem;
+            width: 50px;
+            padding: 1rem 0.3rem;
             overflow: hidden;
         }
 
@@ -195,34 +206,32 @@ switch ($_SESSION['idrol']) {
         .main-content.expanded {
             margin-left: 0;
         }
-
     </style>
 </head>
 <body>
     <div class="container">
         <aside class="sidebar">
-        <button id="toggleSidebar" class="hamburger-btn">☰</button>
+            <button id="toggleSidebar" class="hamburger-btn" title="Mostrar/Ocultar menú">☰</button>
             <h2>AWFerreteria</h2>
             <nav>
-            
-    <button class="accordion-btn">Gestión de usuarios</button>
-    <div class="accordion-panel">
-        <a href="/admin/usuarios/listado.php">Ver usuarios</a>
-        <a href="/admin/roles/asignar.php">Asignar roles</a>
-    </div>
+                <button class="accordion-btn">Gestión de usuarios</button>
+                <div class="accordion-panel">
+                    <a href="../roles/usuarios.php">Usuarios</a>
+                    <a href="/admin/roles/asignar.php">Asignar roles</a>
+                </div>
 
-    <button class="accordion-btn">Gestión de productos</button>
-    <div class="accordion-panel">
-        <a href="/admin/productos/nuevo.php">Agregar producto</a>
-        <a href="/admin/productos/listado.php">Listar productos</a>
-    </div>
+                <button class="accordion-btn">Gestión de productos</button>
+                <div class="accordion-panel">
+                    <a href="/admin/productos/nuevo.php">Agregar producto</a>
+                    <a href="/admin/productos/listado.php">Listar productos</a>
+                </div>
 
-    <button class="accordion-btn">Auditoría y actividad</button>
-    <div class="accordion-panel">
-        <a href="/admin/logs/authlog.php">Ver AuthLog</a>
-        <a href="/admin/reset/listado.php">Solicitudes recuperación</a>
-    </div>
-</nav>
+                <button class="accordion-btn">Auditoría y actividad</button>
+                <div class="accordion-panel">
+                    <a href="/admin/logs/authlog.php">Ver AuthLog</a>
+                    <a href="/admin/reset/listado.php">Solicitudes recuperación</a>
+                </div>
+            </nav>
 
             <a href="../auth/logout.php" class="logout-btn">Cerrar sesión</a>
         </aside>
@@ -231,9 +240,9 @@ switch ($_SESSION['idrol']) {
 
             <h1>Panel de administración</h1>
             <div class="welcome-message">
-                Bienvenido, <strong><?php echo htmlspecialchars($usuarioNombre); ?></strong>.<br />
-                Tu rol es: <strong><?php echo htmlspecialchars($rolNombre); ?></strong>.<br />
-                ID de usuario: <strong><?php echo $usuarioId; ?></strong>
+                Bienvenido, <strong><?= htmlspecialchars($usuarioNombre); ?></strong>.<br />
+                Tu rol es: <strong><?= htmlspecialchars($rolNombre); ?></strong>.<br />
+                ID de usuario: <strong><?= $usuarioId; ?></strong>
             </div>
 
             <section>
@@ -263,37 +272,37 @@ switch ($_SESSION['idrol']) {
     </div>
 
     <script>
-            const accordionButtons = document.querySelectorAll('.accordion-btn');
+        const accordionButtons = document.querySelectorAll('.accordion-btn');
 
-            accordionButtons.forEach(btn => {
-                btn.addEventListener('click', () => {
-                    // Cierra todos los paneles primero
-                    accordionButtons.forEach(otherBtn => {
-                        if (otherBtn !== btn) {
-                            otherBtn.classList.remove('active');
-                            otherBtn.nextElementSibling.style.display = 'none';
-                        }
-                    });
-
-                    // Luego, alterna el botón clicado
-                    btn.classList.toggle('active');
-                    const panel = btn.nextElementSibling;
-                    panel.style.display = panel.style.display === 'block' ? 'none' : 'block';
+        accordionButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                // Cierra todos los paneles primero
+                accordionButtons.forEach(otherBtn => {
+                    if (otherBtn !== btn) {
+                        otherBtn.classList.remove('active');
+                        otherBtn.nextElementSibling.style.display = 'none';
+                    }
                 });
-            });
-            
-            // Colapsar sidebar
-            const toggleBtn = document.getElementById('toggleSidebar');
-            const sidebar = document.querySelector('.sidebar'); // asegúrate que tu sidebar tenga esta clase
-            const mainContent = document.querySelector('.main-content'); // si usas uno
 
-            toggleBtn.addEventListener('click', () => {
-                sidebar.classList.toggle('collapsed');
-                if (mainContent) {
-                    mainContent.classList.toggle('expanded');
-                }
+                // Alterna el panel clicado
+                btn.classList.toggle('active');
+                const panel = btn.nextElementSibling;
+                panel.style.display = panel.style.display === 'block' ? 'none' : 'block';
             });
-        </script>
+        });
+
+        // Colapsar sidebar
+        const toggleBtn = document.getElementById('toggleSidebar');
+        const sidebar = document.querySelector('.sidebar');
+        const mainContent = document.querySelector('.main-content');
+
+        toggleBtn.addEventListener('click', () => {
+            sidebar.classList.toggle('collapsed');
+            if (mainContent) {
+                mainContent.classList.toggle('expanded');
+            }
+        });
+    </script>
 
 </body>
 </html>
