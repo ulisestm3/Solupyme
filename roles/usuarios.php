@@ -1,7 +1,8 @@
 <?php
 require_once('../config/database.php');
 require_once('../config/seguridad.php');
-verificarRol([1]); // Solo administradores pueden acceder al CRUD de usuarios
+verificarPermisoPagina();
+//verificarRol([1]); // Solo administradores pueden acceder al CRUD de usuarios
 
 // Mensajes de éxito y error
 $mensajes = [
@@ -149,13 +150,12 @@ if (isset($_GET['desactivar'])) {
 $conn->close();
 ?>
 
-
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8" />
-    <title>Usuarios</title>
+<meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Panel de Usuarios - AWFerreteria</title>
     <style>
         /* Reset básico */
         * {
@@ -430,6 +430,8 @@ $conn->close();
                 <a href="../admin/dashboard_admin.php">Dashboard</a>
                 <a href="../roles/usuarios.php">Usuarios</a>
                 <a href="../roles/roles.php">Roles</a>
+                <a href="../admin/permisos_por_rol.php">Asignar Páginas</a>
+                <a href="../roles/asignar_permisos.php">Asignar Permisos</a>
             </nav>
             <a href="../auth/logout.php" class="logout-btn">Cerrar sesión</a>
         </aside>

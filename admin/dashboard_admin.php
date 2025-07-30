@@ -26,8 +26,8 @@ switch ($_SESSION['idrol']) {
 <html lang="es">
 <head>
     <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Panel de administración - AWFerreteria</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <style>
         /* Reset básico */
         * {
@@ -220,6 +220,8 @@ switch ($_SESSION['idrol']) {
                 <div class="accordion-panel">
                     <a href="../roles/usuarios.php">Usuarios</a>
                     <a href="../roles/roles.php">Roles</a>
+                    <a href="../admin/permisos_por_rol.php">Asignar Páginas</a>
+                    <a href="../roles/asignar_permisos.php">Asignar Permisos</a>
                 </div>
                 <?php endif; ?>
                 <button class="accordion-btn">Gestión de productos</button>

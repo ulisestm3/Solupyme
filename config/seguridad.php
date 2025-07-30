@@ -16,4 +16,35 @@ function verificarRol($rolesPermitidos = []) {
         exit();
     }
 }
+
+function verificarPermisoPagina() {
+    if (!isset($_SESSION['idrol'])) {
+        header("Location: ../auth/login.php");
+        exit();
+    }
+
+    $paginaActual = basename($_SERVER['PHP_SELF']); // Ejemplo: usuarios.php
+
+    require_once('database.php');
+    $conn = getConnection();
+
+    $stmt = $conn->prepare("
+        SELECT 1 
+        FROM permisos 
+        WHERE idrol = ? 
+          AND pagina = ? 
+          AND activo = b'1'
+        LIMIT 1
+    ");
+    $stmt->bind_param("is", $_SESSION['idrol'], $paginaActual);
+    $stmt->execute();
+    $stmt->store_result();
+
+    if ($stmt->num_rows === 0) {
+        // No tiene permiso
+        header("Location: ../admin/dashboard_admin.php?error=Acceso denegado");
+        exit();
+    }
+}
+
 ?>
