@@ -5,16 +5,16 @@ session_start();
 // Mensajes de éxito y error
 $mensajes = [
     'exito' => [
-        1 => "Usuario agregado correctamente.",
-        2 => "Usuario editado correctamente.",
-        3 => "Usuario desactivado correctamente."
+        1 => "Rol agregado correctamente.",
+        2 => "Rol editado correctamente.",
+        3 => "Rol desactivado correctamente."
     ],
     'error' => [
-        'duplicado' => "El nombre de usuario ya existe. Por favor, elija otro.",
-        'edicion' => "Error al editar el usuario. Por favor, intente nuevamente.",
+        'duplicado' => "El nombre del rol ya existe. Por favor, elija otro.",
+        'edicion' => "Error al editar el rol. Por favor, intente nuevamente.",
         'db' => "Error en la base de datos: ",
-        'desactivacion' => "Error al desactivar el usuario: ",
-        'usuario_protegido' => "No se puede modificar o desactivar al usuario protegido."
+        'desactivacion' => "Error al borrar el rol: ",
+        'rol_protegido' => "No se puede modificar o borrar el rol protegido."
     ]
 ];
 
@@ -34,122 +34,95 @@ if (!isset($_SESSION['idusuario'])) {
 // Conexión
 $conn = getConnection();
 
-// Consulta de roles
-$sqlRoles = "SELECT idrol, nombrerol FROM roles WHERE activo = 1";
-$resultRoles = $conn->query($sqlRoles);
-
-// Consulta de usuarios con su rol
-$sql = "SELECT u.idusuario, u.nombrecompleto, u.usuario, u.correo, u.telefono, u.activo, r.nombrerol
-        FROM usuarios u
-        LEFT JOIN roles r ON u.idrol = r.idrol
-        WHERE u.activo = 1
-        ORDER BY u.idusuario DESC";
+// Consulta de roles activos
+$sql = "SELECT idrol, nombrerol, descripcion FROM roles WHERE activo = 1 ORDER BY idrol DESC";
 $result = $conn->query($sql);
 
-// Lógica para agregar usuario
-if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['agregar_usuario'])) {
-    $nombrecompleto = $_POST['nombrecompleto'];
-    $usuario = $_POST['usuario'];
-    $contrasena = password_hash($_POST['contrasena'], PASSWORD_DEFAULT);
-    $correo = $_POST['correo'];
-    $telefono = $_POST['telefono'];
-    $idrol = $_POST['idrol'];
+// Lógica para agregar rol
+if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['agregar_rol'])) {
+    $nombrerol = $_POST['nombrerol'];
+    $descripcion = $_POST['descripcion'];
     $usuarioregistra = $_SESSION['idusuario'];
 
-    // Verificar si el usuario ya existe
-    $sqlCheck = "SELECT idusuario FROM usuarios WHERE usuario = ?";
+    // Verificar si el rol ya existe
+    $sqlCheck = "SELECT idrol FROM roles WHERE nombrerol = ?";
     $stmtCheck = $conn->prepare($sqlCheck);
-    $stmtCheck->bind_param("s", $usuario);
+    $stmtCheck->bind_param("s", $nombrerol);
     $stmtCheck->execute();
     $resultCheck = $stmtCheck->get_result();
 
     if ($resultCheck->num_rows > 0) {
-        header("Location: usuarios.php?error=duplicado");
+        header("Location: roles.php?error=duplicado");
         exit();
     } else {
-        // Insertar usuario nuevo
-        $sql = "INSERT INTO usuarios (nombrecompleto, usuario, contrasena, correo, telefono, idrol, usuarioregistra)
-                VALUES (?, ?, ?, ?, ?, ?, ?)";
+        // Insertar rol nuevo
+        $sql = "INSERT INTO roles (nombrerol, descripcion, usuarioregistra) VALUES (?, ?, ?)";
         $stmt = $conn->prepare($sql);
-        $stmt->bind_param("sssssii", $nombrecompleto, $usuario, $contrasena, $correo, $telefono, $idrol, $usuarioregistra);
+        $stmt->bind_param("ssi", $nombrerol, $descripcion, $usuarioregistra);
 
         if ($stmt->execute()) {
-            header("Location: usuarios.php?exito=1");
+            header("Location: roles.php?exito=1");
             exit();
         } else {
-            header("Location: usuarios.php?error=duplicado");
+            header("Location: roles.php?error=db&message=" . urlencode($conn->error));
             exit();
         }
     }
 }
 
-// Lógica para editar usuario
-if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['editar_usuario'])) {
-    $idusuario = $_POST['idusuario'];
-    $nombrecompleto = $_POST['nombrecompleto'];
-    $usuario = $_POST['usuario'];
-    $correo = $_POST['correo'];
-    $telefono = $_POST['telefono'];
+// Lógica para editar rol
+if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['editar_rol'])) {
     $idrol = $_POST['idrol'];
-    $activo = isset($_POST['activo']) ? 1 : 0;
+    $nombrerol = $_POST['nombrerol'];
+    $descripcion = $_POST['descripcion'];
 
-    // Validación para el usuario con ID 1
-    if ($idusuario == 1) {
-        header("Location: usuarios.php?error=usuario_protegido");
+    // Validación para el rol con ID 1 (Administrador)
+    if ($idrol == 1) {
+        header("Location: roles.php?error=rol_protegido");
         exit();
     }
 
-    // Solo actualizar la contraseña si se proporcionó una nueva
-    if (!empty($_POST['contrasena'])) {
-        $contrasena = password_hash($_POST['contrasena'], PASSWORD_DEFAULT);
-        $sql = "UPDATE usuarios SET nombrecompleto = ?, usuario = ?, contrasena = ?, correo = ?, telefono = ?, idrol = ?, activo = ? WHERE idusuario = ?";
-        $stmt = $conn->prepare($sql);
-        $stmt->bind_param("sssssiii", $nombrecompleto, $usuario, $contrasena, $correo, $telefono, $idrol, $activo, $idusuario);
-    } else {
-        $sql = "UPDATE usuarios SET nombrecompleto = ?, correo = ?, telefono = ?, idrol = ?, activo = ? WHERE idusuario = ?";
-        $stmt = $conn->prepare($sql);
-        $stmt->bind_param("ssssii", $nombrecompleto, $correo, $telefono, $idrol, $activo, $idusuario);
-    }
+    $sql = "UPDATE roles SET nombrerol = ?, descripcion = ? WHERE idrol = ?";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("ssi", $nombrerol, $descripcion, $idrol);
 
     if ($stmt->execute()) {
-        header("Location: usuarios.php?exito=2");
+        header("Location: roles.php?exito=2");
         exit();
     } else {
-        header("Location: usuarios.php?error=edicion");
+        header("Location: roles.php?error=edicion&message=" . urlencode($conn->error));
         exit();
     }
 }
 
-// Lógica para desactivar usuario
+// Lógica para desactivar rol
 if (isset($_GET['desactivar'])) {
-    $idusuario = $_GET['desactivar'];
+    $idrol = $_GET['desactivar'];
 
-    // Validación para el usuario con ID 1
-    if ($idusuario == 1) {
-        header("Location: usuarios.php?error=usuario_protegido");
+    // Validación para el rol con ID 1 (Administrador)
+    if ($idrol == 1) {
+        header("Location: roles.php?error=rol_protegido");
         exit();
     }
 
-    $sql = "UPDATE usuarios SET activo = 0 WHERE idusuario = ?";
+    $sql = "UPDATE roles SET activo = 0 WHERE idrol = ?";
     $stmt = $conn->prepare($sql);
-    $stmt->bind_param("i", $idusuario);
+    $stmt->bind_param("i", $idrol);
 
     if ($stmt->execute()) {
-        header("Location: usuarios.php?exito=3");
+        header("Location: roles.php?exito=3");
         exit();
     } else {
-        header("Location: usuarios.php?error=desactivacion&message=" . urlencode($conn->error));
+        header("Location: roles.php?error=desactivacion&message=" . urlencode($conn->error));
         exit();
     }
 }
 ?>
-
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8" />
-    <title>Usuarios</title>
+    <title>Roles</title>
     <style>
         /* Reset básico */
         * {
@@ -338,9 +311,7 @@ if (isset($_GET['desactivar'])) {
             margin-top: 10px;
         }
         .modal-content input[type="text"],
-        .modal-content input[type="password"],
-        .modal-content input[type="email"],
-        .modal-content select {
+        .modal-content textarea {
             width: 100%;
             padding: 8px;
             margin-top: 5px;
@@ -428,42 +399,39 @@ if (isset($_GET['desactivar'])) {
             <a href="../auth/logout.php" class="logout-btn">Cerrar sesión</a>
         </aside>
         <main class="main-content">
-            <h1>Usuarios registrados</h1>
-            <a href="#" class="btn btn-primary mb-3" id="nuevoUsuarioBtn">
+            <h1>Roles registrados</h1>
+            <a href="#" class="btn btn-primary mb-3" id="nuevoRolBtn">
                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 24 24" style="margin-right: 5px; vertical-align: middle;">
                     <path d="M12 12c2.7 0 4.88-2.18 4.88-4.88S14.7 2.25 12 2.25 7.13 4.43 7.13 7.13 9.3 12 12 12zm0 2.25c-3.38 0-10.13 1.69-10.13 5.06v2.44h20.25v-2.44c0-3.37-6.75-5.06-10.13-5.06z"/>
                 </svg>
-                Nuevo
+                Nuevo Rol
             </a>
-
             <table>
                 <thead>
                     <tr>
                         <th style="display: none;">ID</th>
-                        <th>Nombre completo</th>
-                        <th>Usuario</th>
-                        <th>Email</th>
-                        <th>Teléfono</th>
-                        <th>Rol</th>
+                        <th>Nombre del Rol</th>
+                        <th>Descripción</th>
                         <th>Acciones</th>
                     </tr>
                 </thead>
                 <tbody>
                 <?php while ($row = $result->fetch_assoc()): ?>
                     <tr>
-                        <td style="display: none;"><?= htmlspecialchars($row['idusuario']) ?></td>
-                        <td><?= htmlspecialchars($row['nombrecompleto']) ?></td>
-                        <td><?= htmlspecialchars($row['usuario']) ?></td>
-                        <td><?= htmlspecialchars($row['correo']) ?></td>
-                        <td><?= htmlspecialchars($row['telefono']) ?></td>
+                        <td style="display: none;"><?= htmlspecialchars($row['idrol']) ?></td>
                         <td><?= htmlspecialchars($row['nombrerol']) ?></td>
+                        <td><?= htmlspecialchars($row['descripcion']) ?></td>
                         <td align="center">
-                            <a href="?editar=<?= $row['idusuario'] ?>" title="Editar" class="action-link">
+                            <a href="#" title="Editar" class="action-link" onclick="abrirModalEdicion(
+                                <?= $row['idrol'] ?>,
+                                '<?= htmlspecialchars($row['nombrerol'], ENT_QUOTES) ?>',
+                                '<?= htmlspecialchars($row['descripcion'], ENT_QUOTES) ?>'
+                            )">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="#007acc" viewBox="0 0 24 24">
                                     <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1.003 1.003 0 0 0 0-1.42l-2.34-2.34a1.003 1.003 0 0 0-1.42 0l-1.83 1.83 3.75 3.75 1.84-1.82z"/>
                                 </svg>
                             </a>
-                            <a href="#" title="Desactivar" class="action-link" onclick="abrirModalConfirmacionDesactivar(<?= $row['idusuario'] ?>)">
+                            <a href="#" title="Desactivar" class="action-link" onclick="abrirModalConfirmacionDesactivar(<?= $row['idrol'] ?>)">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="#d9534f" viewBox="0 0 24 24">
                                     <path d="M3 6h18v2H3V6zm2 3h14v11a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V9zm3 3v6h2v-6H8zm4 0v6h2v-6h-2zM9 4h6v2H9V4z"/>
                                 </svg>
@@ -476,90 +444,54 @@ if (isset($_GET['desactivar'])) {
         </main>
     </div>
 
-    <!-- Modal para nuevo usuario -->
-    <div id="nuevoUsuarioModal" class="modal">
+    <!-- Modal para nuevo rol -->
+    <div id="nuevoRolModal" class="modal">
         <div class="modal-content">
-            <span class="close" onclick="document.getElementById('nuevoUsuarioModal').style.display='none'">&times;</span>
-            <h2 style="margin-bottom: 20px; color: #004080;">Agregar Nuevo Usuario</h2>
-            <form action="usuarios.php" method="post">
-                <label for="nombrecompleto">Nombre Completo: * </label>
-                <input type="text" id="nombrecompleto" name="nombrecompleto" required>
-                <label for="usuario">Usuario: * </label>
-                <input type="text" id="usuario" name="usuario" required>
-                <label for="contrasena">Contraseña: * </label>
-                <input type="password" id="contrasena" name="contrasena" required>
-                <label for="correo">Correo:</label>
-                <input type="email" id="correo" name="correo">
-                <label for="telefono">Teléfono:</label>
-                <input type="text" id="telefono" name="telefono">
-                <label for="idrol">Rol: * </label>
-                <select id="idrol" name="idrol" required>
-                    <option value="">Seleccione un rol</option>
-                    <?php
-                    $resultRoles->data_seek(0);
-                    while ($rowRol = $resultRoles->fetch_assoc()): ?>
-                        <option value="<?= htmlspecialchars($rowRol['idrol']) ?>">
-                            <?= htmlspecialchars($rowRol['nombrerol']) ?>
-                        </option>
-                    <?php endwhile; ?>
-                </select>
-                <button type="submit" name="agregar_usuario">Agregar Usuario</button>
+            <span class="close" onclick="cerrarModal('nuevoRolModal')">&times;</span>
+            <h2 style="margin-bottom: 20px; color: #004080;">Agregar Nuevo Rol</h2>
+            <form action="roles.php" method="post">
+                <label for="nombrerol">Nombre del Rol: *</label>
+                <input type="text" id="nombrerol" name="nombrerol" required>
+                <label for="descripcion">Descripción:</label>
+                <textarea id="descripcion" name="descripcion" rows="3"></textarea>
+                <button type="submit" name="agregar_rol">Agregar Rol</button>
             </form>
         </div>
     </div>
 
-    <!-- Modal para editar usuario -->
-    <div id="editarUsuarioModal" class="modal">
+    <!-- Modal para editar rol -->
+    <div id="editarRolModal" class="modal">
         <div class="modal-content">
-            <span class="close" onclick="document.getElementById('editarUsuarioModal').style.display='none'">&times;</span>
-            <h2 style="margin-bottom: 20px; color: #004080;">Editar Usuario</h2>
-            <form action="usuarios.php" method="post">
-                <input type="hidden" id="editar_idusuario" name="idusuario">
-                <label for="editar_nombrecompleto">Nombre Completo:</label>
-                <input type="text" id="editar_nombrecompleto" name="nombrecompleto" required>
-                <label for="editar_usuario">Usuario:</label>
-                <input type="text" id="editar_usuario" name="usuario" required>
-                <label for="editar_contrasena">Contraseña (dejar en blanco para no cambiar):</label>
-                <input type="password" id="editar_contrasena" name="contrasena">
-                <label for="editar_correo">Correo:</label>
-                <input type="email" id="editar_correo" name="correo">
-                <label for="editar_telefono">Teléfono:</label>
-                <input type="text" id="editar_telefono" name="telefono">
-                <label for="editar_idrol">Rol:</label>
-                <select id="editar_idrol" name="idrol" required>
-                    <option value="">Seleccione un rol</option>
-                    <?php
-                    $resultRoles->data_seek(0);
-                    while ($rowRol = $resultRoles->fetch_assoc()): ?>
-                        <option value="<?= htmlspecialchars($rowRol['idrol']) ?>">
-                            <?= htmlspecialchars($rowRol['nombrerol']) ?>
-                        </option>
-                    <?php endwhile; ?>
-                </select>
-                <button type="submit" name="editar_usuario">Guardar Cambios</button>
+            <span class="close" onclick="cerrarModal('editarRolModal')">&times;</span>
+            <h2 style="margin-bottom: 20px; color: #004080;">Editar Rol</h2>
+            <form action="roles.php" method="post">
+                <input type="hidden" id="editar_idrol" name="idrol">
+                <label for="editar_nombrerol">Nombre del Rol: *</label>
+                <input type="text" id="editar_nombrerol" name="nombrerol" required>
+                <label for="editar_descripcion">Descripción:</label>
+                <textarea id="editar_descripcion" name="descripcion" rows="3"></textarea>
+                <button type="submit" name="editar_rol">Guardar Cambios</button>
             </form>
         </div>
     </div>
 
     <!-- Modal de confirmación de desactivación -->
     <div id="confirmarDesactivarModal" class="modal">
-    <div class="modal-content" style="text-align: center; width: auto; max-width: 400px;">
-    <h3 style="margin-bottom: 20px; color: #004080;">Confirmar Borrado</h3>
-        <p style="margin-bottom: 30px;">¿Estás seguro de que quieres borrar este usuario?</p>
-        <div style="display: inline-flex; justify-content: center; gap: 20px; margin: 0 auto;">
-    <button id="btnConfirmarDesactivar"
-            style="background-color: #d9534f; color: white; padding: 8px 20px; border: none; border-radius: 4px; cursor: pointer; width: 120px;">
-        Borrar
-    </button>
-    <button id="btnCancelarDesactivar"
-            style="background-color: #ccc; color: #333; padding: 8px 20px; border: none; border-radius: 4px; cursor: pointer; width: 120px;">
-        Cancelar
-    </button>
-</div>
-
+        <div class="modal-content" style="text-align: center; width: auto; max-width: 400px;">
+            <h3 style="margin-bottom: 20px; color: #004080;">Confirmar Borrado</h3>
+            <p style="margin-bottom: 30px;">¿Estás seguro de que quieres borrar este rol?</p>
+            <div style="display: inline-flex; justify-content: center; gap: 20px; margin: 0 auto;">
+                <button id="btnConfirmarDesactivar"
+                        style="background-color: #d9534f; color: white; padding: 8px 20px; border: none; border-radius: 4px; cursor: pointer; width: 120px;">
+                    Borrar
+                </button>
+                <button id="btnCancelarDesactivar"
+                        style="background-color: #ccc; color: #333; padding: 8px 20px; border: none; border-radius: 4px; cursor: pointer; width: 120px;">
+                    Cancelar
+                </button>
+            </div>
+        </div>
     </div>
-</div>
-
 
     <script>
         // Función para mostrar mensajes
@@ -587,100 +519,63 @@ if (isset($_GET['desactivar'])) {
             document.body.appendChild(overlay);
         }
 
-        // Función para abrir el modal de edición
-        function abrirModalEdicion(idusuario, nombrecompleto, usuario, correo, telefono, idrol) {
-            document.getElementById('editar_idusuario').value = idusuario;
-            document.getElementById('editar_nombrecompleto').value = nombrecompleto;
-            document.getElementById('editar_usuario').value = usuario;
-            document.getElementById('editar_correo').value = correo;
-            document.getElementById('editar_telefono').value = telefono;
-            document.getElementById('editar_idrol').value = idrol;
-            document.getElementById('editarUsuarioModal').style.display = 'block';
+        // Función para cerrar modales y limpiar campos
+        function cerrarModal(modalId) {
+            const modal = document.getElementById(modalId);
+            modal.style.display = 'none';
+
+            // Limpiar campos del formulario
+            const form = modal.querySelector('form');
+            if (form) {
+                form.reset();
+            }
         }
 
-        // Manejar clics en los enlaces de edición
-        document.querySelectorAll('a[href*="?editar="]').forEach(link => {
-            link.addEventListener('click', function(e) {
-                e.preventDefault();
-                const idusuario = this.href.split('=')[1];
-                const row = this.closest('tr');
-                const nombrecompleto = row.cells[1].textContent;
-                const usuario = row.cells[2].textContent;
-                const correo = row.cells[3].textContent;
-                const telefono = row.cells[4].textContent;
-                const rol = row.cells[5].textContent;
+        // Función para abrir el modal de edición
+        function abrirModalEdicion(idrol, nombrerol, descripcion) {
+            document.getElementById('editar_idrol').value = idrol;
+            document.getElementById('editar_nombrerol').value = nombrerol;
+            document.getElementById('editar_descripcion').value = descripcion;
+            document.getElementById('editarRolModal').style.display = 'block';
+        }
 
-                const idrol = <?php
-                    $roles = array();
-                    $resultRoles->data_seek(0);
-                    while ($rowRol = $resultRoles->fetch_assoc()) {
-                        $roles[$rowRol['nombrerol']] = $rowRol['idrol'];
-                    }
-                    echo json_encode($roles);
-                ?>[rol];
-
-                abrirModalEdicion(idusuario, nombrecompleto, usuario, correo, telefono, idrol);
-            });
-        });
-
-        // Variable para almacenar el ID del usuario a desactivar
-        let usuarioADesactivar = null;
+        // Variable para almacenar el ID del rol a desactivar
+        let rolADesactivar = null;
 
         // Función para abrir el modal de confirmación de desactivación
-        function abrirModalConfirmacionDesactivar(idusuario) {
-            usuarioADesactivar = idusuario;
+        function abrirModalConfirmacionDesactivar(idrol) {
+            rolADesactivar = idrol;
             document.getElementById('confirmarDesactivarModal').style.display = 'block';
         }
 
         // Manejar el botón de confirmar desactivación
         document.getElementById('btnConfirmarDesactivar').addEventListener('click', function() {
-            if (usuarioADesactivar) {
-                window.location.href = `?desactivar=${usuarioADesactivar}`;
+            if (rolADesactivar) {
+                window.location.href = `roles.php?desactivar=${rolADesactivar}`;
             }
         });
 
         // Manejar el botón de cancelar desactivación
         document.getElementById('btnCancelarDesactivar').addEventListener('click', function() {
             document.getElementById('confirmarDesactivarModal').style.display = 'none';
-            usuarioADesactivar = null;
+            rolADesactivar = null;
         });
 
-        // Manejar el botón de nuevo usuario
-        document.getElementById("nuevoUsuarioBtn").addEventListener("click", function(event) {
+        // Manejar el botón de nuevo rol
+        document.getElementById("nuevoRolBtn").addEventListener("click", function(event) {
             event.preventDefault();
-            document.getElementById("nuevoUsuarioModal").style.display = "block";
+            document.getElementById("nuevoRolModal").style.display = "block";
         });
 
-        // Función para limpiar los campos del modal
-        function limpiarCamposModal() {
-            const form = document.querySelector("#nuevoUsuarioModal form");
-            if (form) {
-                form.reset(); // Esto limpiará todos los campos del formulario
-            }
-        }
-
-        // Cerrar el modal de nuevo usuario
-        document.querySelector("#nuevoUsuarioModal .close").addEventListener("click", function() {
-            limpiarCamposModal();
-            document.getElementById("nuevoUsuarioModal").style.display = "none";
-        });
-
-        // Cerrar el modal si se hace clic fuera de él
+        // Cerrar modales si se hace clic fuera de ellos
         window.addEventListener("click", function(event) {
-            const modal = document.getElementById("nuevoUsuarioModal");
-            if (event.target === modal) {
-                limpiarCamposModal();
-                modal.style.display = "none";
-            }
-        });
-
-        // Cerrar el modal si se hace clic fuera de él
-        window.addEventListener("click", function(event) {
-            const modal = document.getElementById("editarUsuarioModal");
-            if (event.target === modal) {
-                limpiarCamposModal();
-                modal.style.display = "none";
-            }
+            const modales = ['nuevoRolModal', 'editarRolModal', 'confirmarDesactivarModal'];
+            modales.forEach(modalId => {
+                const modal = document.getElementById(modalId);
+                if (event.target === modal) {
+                    cerrarModal(modalId);
+                }
+            });
         });
 
         <?php if (!empty($mensajeError)): ?>
@@ -688,7 +583,7 @@ if (isset($_GET['desactivar'])) {
                 <?php $tipoMensaje = (strpos($mensajeError, 'correctamente') !== false) ? 'success' : 'error'; ?>
                 mostrarMensaje("<?= htmlspecialchars($mensajeError) ?>", "<?= $tipoMensaje ?>");
                 <?php if ($tipoMensaje === 'error'): ?>
-                    document.getElementById('nuevoUsuarioModal').style.display = 'block';
+                    document.getElementById('nuevoRolModal').style.display = 'block';
                 <?php endif; ?>
             };
         <?php endif; ?>

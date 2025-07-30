@@ -217,7 +217,7 @@ switch ($_SESSION['idrol']) {
                 <button class="accordion-btn">Gestión de usuarios</button>
                 <div class="accordion-panel">
                     <a href="../roles/usuarios.php">Usuarios</a>
-                    <a href="/admin/roles/asignar.php">Asignar roles</a>
+                    <a href="../roles/roles.php">Roles</a>
                 </div>
 
                 <button class="accordion-btn">Gestión de productos</button>
@@ -248,8 +248,8 @@ switch ($_SESSION['idrol']) {
             <section>
                 <h2>Gestión de usuarios</h2>
                 <ul>
-                    <li><a href="/admin/usuarios/listado.php">Ver usuarios</a></li>
-                    <li><a href="/admin/roles/asignar.php">Asignar roles</a></li>
+                    <li><a href="../roles/usuarios.php">Usuarios</a></li>
+                    <li><a href="../roles/roles.php">Roles</a></li>
                 </ul>
             </section>
 
