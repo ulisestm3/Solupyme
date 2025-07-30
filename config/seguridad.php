@@ -36,6 +36,7 @@ function verificarPermisoPagina() {
           AND activo = b'1'
         LIMIT 1
     ");
+    
     $stmt->bind_param("is", $_SESSION['idrol'], $paginaActual);
     $stmt->execute();
     $stmt->store_result();

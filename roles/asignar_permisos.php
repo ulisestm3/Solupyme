@@ -1,15 +1,15 @@
 <?php
 require_once('../config/database.php');
 require_once('../config/seguridad.php');
+verificarPermisoPagina();
+
 $conn = getConnection();
 // Obtener roles
 $roles = $conn->query("SELECT idrol, nombrerol FROM roles WHERE activo = b'1'")->fetch_all(MYSQLI_ASSOC);
-
 // Determinar el rol seleccionado: el enviado por GET o el primero por defecto
 $idrolSeleccionado = isset($_GET['idrol']) && $_GET['idrol'] != ''
     ? (int) $_GET['idrol']
     : ($roles[0]['idrol'] ?? 0);  // Si no hay roles, 0
-
 // Obtener páginas asignadas al rol seleccionado
 $paginas = [];
 if ($idrolSeleccionado > 0) {
@@ -18,12 +18,10 @@ if ($idrolSeleccionado > 0) {
         $paginas[] = $row['pagina'];
     }
 }
-
 // Guardar permisos si se envió el formulario
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $idrol = isset($_POST['idrol']) ? (int)$_POST['idrol'] : 0;
     if ($idrol === 0) {
-        // Evita continuar si no se seleccionó rol
         header("Location: asignar_permisos.php?error=seleccionar_rol");
         exit();
     }
@@ -49,12 +47,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         /* Reset básico */
         * {
             box-sizing: border-box;
-            margin: 0; padding: 0;
+            margin: 0;
+            padding: 0;
         }
         body, html {
             height: 100%;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f4f6f85c;
+            background-color: #f4f6f8;
             color: #333;
         }
         .container {
@@ -64,11 +63,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         /* Sidebar */
         .sidebar {
             width: 200px;
-            background-color: #352b56ff;
+            background-color: #352b56;
             color: white;
             display: flex;
             flex-direction: column;
-            padding: 1rem 1rem;
+            padding: 1rem;
         }
         .sidebar h2 {
             font-size: 1.25rem;
@@ -91,7 +90,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         .sidebar .logout-btn {
             margin-top: auto;
-            background-color: #5596ebff;
+            background-color: #5596eb;
             padding: 0.6rem 1rem;
             border-radius: 6px;
             text-align: center;
@@ -101,63 +100,90 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             font-size: 0.9rem;
         }
         .sidebar .logout-btn:hover {
-            background-color: #a3ad4cff;
+            background-color: #a3ad4c;
         }
         /* Main content */
         .main-content {
             flex: 1;
-            padding: 1rem 1.5rem;
+            padding: 1.5rem;
             margin: 0.5rem;
             overflow-y: auto;
             font-size: 14px;
         }
-        .main-content h1 {
+        .main-content h2 {
+            text-align: center;
             color: #004080;
-            margin-bottom: 1rem;
+            margin-bottom: 1.5rem;
             font-size: 1.5rem;
+            padding-bottom: 0.5rem;
         }
-        a.btn {
-            display: inline-block;
-            background-color: #004080;
-            color: white;
-            padding: 6px 12px;
-            text-decoration: none;
-            border-radius: 4px;
-            font-size: 14px;
-            margin-bottom: 15px;
-        }
-        a.btn:hover {
-            background-color: #2563eb;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
+        /* Card styles */
+        .card-permisos {
             background-color: #fff;
-            font-size: 13px;
+            border-radius: 12px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            padding: 2rem;
+            max-width: 600px;
+            margin: 0 auto;
         }
-        th, td {
-            padding: 6px 8px;
+        /* Form styles */
+        .select-rol {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+        }
+        .select-rol label {
+            font-weight: bold;
+            color: #004080;
+            white-space: nowrap;
+        }
+        select {
+            padding: 0.5rem;
+            border-radius: 4px;
             border: 1px solid #ccc;
-            text-align: left;
+            flex: 1;
         }
-        th {
+        /* Checkbox styles */
+        .checkbox-group {
+            margin: 1rem 0;
+        }
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+        .checkbox-item input[type="checkbox"] {
+            margin-right: 0.5rem;
+        }
+        .checkbox-item label {
+            margin-left: 0.2rem;
+        }
+        /* Button styles */
+        button[type="submit"] {
             background-color: #007acc;
             color: white;
-            font-weight: 600;
-        }
-        /* Acción editar */
-        .action-link {
-            display: inline-block;
-            margin-right: 8px;
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 4px;
             cursor: pointer;
-            vertical-align: middle;
+            font-size: 14px;
+            display: block;
+            margin: 1.5rem auto 0;
+            transition: background-color 0.3s ease;
         }
-        .action-link svg {
-            vertical-align: middle;
-            transition: transform 0.2s ease;
+        button[type="submit"]:hover {
+            background-color: #005f9e;
         }
-        .action-link:hover svg {
-            transform: scale(1.2);
+        /* Message styles */
+        .success-message {
+            color: #28a745;
+            background-color: #d4edda;
+            padding: 0.75rem;
+            border-radius: 4px;
+            margin-bottom: 1rem;
+            text-align: center;
+            font-weight: bold;
         }
         /* Responsive */
         @media (max-width: 768px) {
@@ -180,8 +206,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             .sidebar nav {
                 display: flex;
                 gap: 1rem;
+                overflow-x: auto;
+                padding-bottom: 0.5rem;
             }
             .sidebar nav a {
+                white-space: nowrap;
                 margin-bottom: 0;
                 padding: 0.5rem 0.8rem;
                 font-size: 0.8rem;
@@ -192,142 +221,78 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 font-size: 0.8rem;
             }
             .main-content {
-                padding: 1rem 1rem;
+                padding: 1rem;
                 margin: 0;
-                font-size: 13px;
             }
-        }
-        /* Estilos para el contenido específico de esta página */
-        .main-content h2 {
-            color: #004080;
-            margin-bottom: 1rem;
-            font-size: 1.3rem;
-        }
-        .success-message {
-            color: green;
-            margin-bottom: 1rem;
-            font-weight: bold;
-        }
-        form {
-            margin-bottom: 1.5rem;
-        }
-        label {
-            display: block;
-            margin-bottom: 0.5rem;
-            font-weight: bold;
-        }
-        select {
-            padding: 0.4rem;
-            border-radius: 4px;
-            border: 1px solid #ccc;
-            margin-bottom: 1rem;
-        }
-        .checkbox-group {
-            margin-bottom: 1rem;
-        }
-        .checkbox-group div {
-            margin-bottom: 0.5rem;
-        }
-        button[type="submit"] {
-            background-color: #004080;
-            color: white;
-            padding: 0.5rem 1rem;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 14px;
-        }
-        button[type="submit"]:hover {
-            background-color: #2563eb;
-        }
-        .card-permisos {
-            background-color: #fff;
-            border-radius: 12px;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-            padding: 2rem;
-            max-width: 600px;
-            margin: 0 auto;
-        }
-        .card-permisos h4 {
-            margin-top: 1.5rem;
-        }
-        .card-permisos .checkbox-group > div {
-            display: flex;
-            align-items: center;
-            margin-bottom: 0.5rem;
-        }
-        .card-permisos label {
-            margin-left: 0.5rem;
-        }
-        .select-rol {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            margin-bottom: 1.5rem;
-        }
-        .select-rol label {
-            white-space: nowrap;
-        }
-        .main-content h2 {
-            text-align: center;
+            .card-permisos {
+                padding: 1.5rem;
+                margin: 0 0.5rem;
+            }
+            .select-rol {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            select {
+                width: 100%;
+            }
         }
     </style>
 </head>
 <body>
-<div class="container">
-    <aside class="sidebar">
-        <h2>AWFerreteria</h2>
-        <nav>
-            <a href="../admin/dashboard_admin.php">Dashboard</a>
-            <a href="../roles/usuarios.php">Usuarios</a>
-            <a href="../roles/roles.php">Roles</a>
-            <a href="../admin/permisos_por_rol.php">Asignar Páginas</a>
-            <a href="../roles/asignar_permisos.php">Asignar Permisos</a>
-        </nav>
-        <a href="../auth/logout.php" class="logout-btn">Cerrar sesión</a>
-    </aside>
-    <main class="main-content">
-    <h2>Asignar Permisos por Página</h2>
-    <div class="card-permisos">
-        <?php if (isset($_GET['exito'])): ?>
-            <p class="success-message">Permisos actualizados correctamente</p>
-        <?php endif; ?>
-        <form method="GET">
-            <div class="select-rol">
-                <label for="idrol">Selecciona un rol:</label>
-                <select name="idrol" id="idrol" required onchange="this.form.submit()">
-                    <?php foreach ($roles as $rol): ?>
-                        <option value="<?= $rol['idrol'] ?>" <?= $rol['idrol'] == $idrolSeleccionado ? 'selected' : '' ?>>
-                            <?= $rol['nombrerol'] ?>
-                        </option>
-                    <?php endforeach; ?>
-                </select>
-            </div>
-        </form>
-        <?php if ($idrolSeleccionado > 0):
-            $permisosActuales = [];
-            $res = $conn->query("SELECT pagina FROM vista_roles_permisos WHERE idrol = $idrolSeleccionado AND activo = b'1'");
-            while ($row = $res->fetch_assoc()) {
-                $permisosActuales[] = $row['pagina'];
-            }
-        ?>
-        <form method="POST">
-            <input type="hidden" name="idrol" value="<?= $idrolSeleccionado ?>">
-            <h4>Páginas disponibles:</h4> <br/>
-            <div class="checkbox-group">
-                <?php foreach ($paginas as $pagina): ?>
-                    <div>
-                        <input type="checkbox" name="paginas[]" value="<?= $pagina ?>"
-                            <?= in_array($pagina, $permisosActuales) ? 'checked' : '' ?>>
-                        <label><?= $pagina ?></label>
+    <div class="container">
+        <aside class="sidebar">
+            <h2>AWFerreteria</h2>
+            <nav>
+                <a href="../admin/dashboard_admin.php">Dashboard</a>
+                <a href="../roles/usuarios.php">Usuarios</a>
+                <a href="../roles/roles.php">Roles</a>
+                <a href="../admin/permisos_por_rol.php">Asignar Páginas</a>
+                <a href="../roles/asignar_permisos.php">Asignar Permisos</a>
+            </nav>
+            <a href="../auth/logout.php" class="logout-btn">Cerrar sesión</a>
+        </aside>
+        <main class="main-content">
+            <h2>Asignar Permisos a Página</h2>
+            <div class="card-permisos">
+                <?php if (isset($_GET['exito'])): ?>
+                    <p class="success-message">Permisos actualizados correctamente</p>
+                <?php endif; ?>
+                <form method="GET">
+                    <div class="select-rol">
+                        <label for="idrol">Selecciona un rol:</label>
+                        <select name="idrol" id="idrol" required onchange="this.form.submit()">
+                           <?php foreach ($roles as $rol): ?>
+                                <option value="<?= $rol['idrol'] ?>" <?= $rol['idrol'] == $idrolSeleccionado ? 'selected' : '' ?>>
+                                    <?= $rol['nombrerol'] ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
                     </div>
-                <?php endforeach; ?>
+                </form>
+                <?php if ($idrolSeleccionado > 0):
+                    $permisosActuales = [];
+                    $res = $conn->query("SELECT pagina FROM vista_roles_permisos WHERE idrol = $idrolSeleccionado AND activo = b'1'");
+                    while ($row = $res->fetch_assoc()) {
+                        $permisosActuales[] = $row['pagina'];
+                    }
+                ?>
+                <form method="POST">
+                    <input type="hidden" name="idrol" value="<?= $idrolSeleccionado ?>">
+                    <h3>Páginas disponibles:</h3>
+                    <div class="checkbox-group">
+                        <?php foreach ($paginas as $pagina): ?>
+                            <div class="checkbox-item">
+                                <input type="checkbox" name="paginas[]" id="pagina-<?= $pagina ?>" value="<?= $pagina ?>"
+                                    <?= in_array($pagina, $permisosActuales) ? 'checked' : '' ?>>
+                                <label for="pagina-<?= $pagina ?>"><?= $pagina ?></label>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+                    <button type="submit">Guardar permisos</button>
+                </form>
+                <?php endif; ?>
             </div>
-            <button type="submit">Guardar permisos</button>
-        </form>
-        <?php endif; ?>
+        </main>
     </div>
-</main>
-</div>
 </body>
 </html>

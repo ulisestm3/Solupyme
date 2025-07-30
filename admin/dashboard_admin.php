@@ -1,25 +1,12 @@
 <?php
-if (session_status() !== PHP_SESSION_ACTIVE) {
-    session_start();
-}
-
-if (!isset($_SESSION['idusuario'])) {
-    header("Location: ../index.php?error=Acceso no autorizado.");
-    exit();
-}
+require_once('../config/seguridad.php');
 
 // Variables para mostrar en la bienvenida
 $usuarioId = $_SESSION['idusuario'];
 $usuarioNombre = $_SESSION['nombrecompleto'];
-$rolId = $_SESSION['idrol']; 
-$rolNombre = ''; // Aquí podrías traer el nombre del rol desde BD o definir según idrol
+$rolId = $_SESSION['idrol'];
+$rolNombre = $_SESSION['nombrerol'];
 
-// Ejemplo básico para rolNombre (puedes mejorar esto con consulta real)
-switch ($_SESSION['idrol']) {
-    case 1: $rolNombre = 'Administrador'; break;
-    case 2: $rolNombre = 'Usuario'; break;
-    default: $rolNombre = 'Invitado';
-}
 ?>
 
 <!DOCTYPE html>
@@ -255,6 +242,8 @@ switch ($_SESSION['idrol']) {
                 <ul>
                     <li><a href="../roles/usuarios.php">Usuarios</a></li>
                     <li><a href="../roles/roles.php">Roles</a></li>
+                    <li><a href="../admin/permisos_por_rol.php">Asignar Páginas</a></li>
+                    <li><a href="../roles/asignar_permisos.php">Asignar Permisos</a></li>
                 </ul>
             </section>
 

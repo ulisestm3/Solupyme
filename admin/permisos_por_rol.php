@@ -1,11 +1,8 @@
 <?php
 require_once('../config/database.php');
-session_start();
-// Solo admin (por ejemplo, idrol = 1)
-if ($_SESSION['idrol'] != 1) {
-    header("Location: dashboard_admin.php");
-    exit();
-}
+require_once('../config/seguridad.php');
+verificarPermisoPagina();
+
 $conn = getConnection();
 // Obtener roles
 $roles = $conn->query("SELECT idrol, nombrerol FROM roles WHERE activo = b'1'")->fetch_all(MYSQLI_ASSOC);
@@ -31,16 +28,17 @@ $paginasPermitidas = array_column($result->fetch_all(MYSQLI_ASSOC), 'pagina');
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Panel de Páginas - AWFerreteria</title>
-    <style>
+     <style>
         /* Reset básico */
         * {
             box-sizing: border-box;
-            margin: 0; padding: 0;
+            margin: 0;
+            padding: 0;
         }
         body, html {
             height: 100%;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f4f6f85c;
+            background-color: #f4f6f8;
             color: #333;
         }
         .container {
@@ -50,11 +48,11 @@ $paginasPermitidas = array_column($result->fetch_all(MYSQLI_ASSOC), 'pagina');
         /* Sidebar */
         .sidebar {
             width: 200px;
-            background-color: #352b56ff;
+            background-color: #352b56;
             color: white;
             display: flex;
             flex-direction: column;
-            padding: 1rem 1rem;
+            padding: 1rem;
         }
         .sidebar h2 {
             font-size: 1.25rem;
@@ -77,7 +75,7 @@ $paginasPermitidas = array_column($result->fetch_all(MYSQLI_ASSOC), 'pagina');
         }
         .sidebar .logout-btn {
             margin-top: auto;
-            background-color: #5596ebff;
+            background-color: #5596eb;
             padding: 0.6rem 1rem;
             border-radius: 6px;
             text-align: center;
@@ -87,12 +85,12 @@ $paginasPermitidas = array_column($result->fetch_all(MYSQLI_ASSOC), 'pagina');
             font-size: 0.9rem;
         }
         .sidebar .logout-btn:hover {
-            background-color: #a3ad4cff;
+            background-color: #a3ad4c;
         }
         /* Main content */
         .main-content {
             flex: 1;
-            padding: 1rem 1.5rem;
+            padding: 1.5rem;
             margin: 0.5rem;
             overflow-y: auto;
             font-size: 14px;
@@ -101,6 +99,8 @@ $paginasPermitidas = array_column($result->fetch_all(MYSQLI_ASSOC), 'pagina');
             text-align: center;
             color: #004080;
             margin-bottom: 1.5rem;
+            font-size: 1.5rem;
+            padding-bottom: 0.5rem;
         }
         /* Card styles */
         .card-permisos {
@@ -121,6 +121,7 @@ $paginasPermitidas = array_column($result->fetch_all(MYSQLI_ASSOC), 'pagina');
         .select-rol label {
             font-weight: bold;
             color: #004080;
+            white-space: nowrap;
         }
         select {
             padding: 0.5rem;
@@ -140,6 +141,9 @@ $paginasPermitidas = array_column($result->fetch_all(MYSQLI_ASSOC), 'pagina');
         .checkbox-item input[type="checkbox"] {
             margin-right: 0.5rem;
         }
+        .checkbox-item label {
+            margin-left: 0.2rem;
+        }
         /* Button styles */
         button[type="submit"] {
             background-color: #007acc;
@@ -151,9 +155,20 @@ $paginasPermitidas = array_column($result->fetch_all(MYSQLI_ASSOC), 'pagina');
             font-size: 14px;
             display: block;
             margin: 1.5rem auto 0;
+            transition: background-color 0.3s ease;
         }
         button[type="submit"]:hover {
             background-color: #005f9e;
+        }
+        /* Message styles */
+        .success-message {
+            color: #28a745;
+            background-color: #d4edda;
+            padding: 0.75rem;
+            border-radius: 4px;
+            margin-bottom: 1rem;
+            text-align: center;
+            font-weight: bold;
         }
         /* Responsive */
         @media (max-width: 768px) {
@@ -202,8 +217,8 @@ $paginasPermitidas = array_column($result->fetch_all(MYSQLI_ASSOC), 'pagina');
                 flex-direction: column;
                 align-items: flex-start;
             }
-            .checkbox-group {
-                grid-template-columns: 1fr;
+            select {
+                width: 100%;
             }
         }
     </style>
@@ -226,7 +241,7 @@ $paginasPermitidas = array_column($result->fetch_all(MYSQLI_ASSOC), 'pagina');
             <div class="card-permisos">
                 <form method="get">
                     <div class="select-rol">
-                        <label for="idrol">Seleccionar Rol:</label>
+                        <label for="idrol">Selecciona un rol:</label>
                         <select name="idrol" id="idrol" onchange="this.form.submit()">
                             <?php foreach ($roles as $rol): ?>
                                 <option value="<?= $rol['idrol'] ?>" <?= $rol['idrol'] == $idrolSeleccionado ? 'selected' : '' ?>>
