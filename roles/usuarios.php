@@ -2,14 +2,27 @@
 require_once('../config/database.php');
 session_start();
 
+// Mensajes de éxito y error
+$mensajes = [
+    'exito' => [
+        1 => "Usuario agregado correctamente.",
+        2 => "Usuario editado correctamente.",
+        3 => "Usuario desactivado correctamente."
+    ],
+    'error' => [
+        'duplicado' => "El nombre de usuario ya existe. Por favor, elija otro.",
+        'edicion' => "Error al editar el usuario. Por favor, intente nuevamente.",
+        'db' => "Error en la base de datos: ",
+        'desactivacion' => "Error al desactivar el usuario: "
+    ]
+];
+
 $mensajeError = '';
-
-if (isset($_GET['exito']) && $_GET['exito'] == 1) {
-    $mensajeError = "Usuario agregado correctamente.";
-} elseif (isset($_GET['error']) && $_GET['error'] === 'duplicado') {
-    $mensajeError = "El nombre de usuario ya existe. Por favor, elija otro.";
+if (isset($_GET['exito']) && isset($mensajes['exito'][$_GET['exito']])) {
+    $mensajeError = $mensajes['exito'][$_GET['exito']];
+} elseif (isset($_GET['error']) && isset($mensajes['error'][$_GET['error']])) {
+    $mensajeError = $mensajes['error'][$_GET['error']] . (isset($_GET['message']) ? htmlspecialchars($_GET['message']) : '');
 }
-
 
 // Verificación de sesión
 if (!isset($_SESSION['idusuario'])) {
@@ -28,9 +41,11 @@ $resultRoles = $conn->query($sqlRoles);
 $sql = "SELECT u.idusuario, u.nombrecompleto, u.usuario, u.correo, u.telefono, u.activo, r.nombrerol
         FROM usuarios u
         LEFT JOIN roles r ON u.idrol = r.idrol
+        WHERE u.activo = 1
         ORDER BY u.idusuario DESC";
 $result = $conn->query($sql);
 
+// Lógica para agregar usuario
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['agregar_usuario'])) {
     $nombrecompleto = $_POST['nombrecompleto'];
     $usuario = $_POST['usuario'];
@@ -48,31 +63,71 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['agregar_usuario'])) {
     $resultCheck = $stmtCheck->get_result();
 
     if ($resultCheck->num_rows > 0) {
-        $mensajeError = "El nombre de usuario ya existe. Por favor, elija otro.";
+        header("Location: usuarios.php?error=duplicado");
+        exit();
     } else {
         // Insertar usuario nuevo
-        $sql = "INSERT INTO usuarios (nombrecompleto, usuario, contrasena, correo, telefono, idrol, usuarioregistra) 
+        $sql = "INSERT INTO usuarios (nombrecompleto, usuario, contrasena, correo, telefono, idrol, usuarioregistra)
                 VALUES (?, ?, ?, ?, ?, ?, ?)";
         $stmt = $conn->prepare($sql);
         $stmt->bind_param("sssssii", $nombrecompleto, $usuario, $contrasena, $correo, $telefono, $idrol, $usuarioregistra);
 
         if ($stmt->execute()) {
-            // Redirige para evitar reenvío del formulario
             header("Location: usuarios.php?exito=1");
             exit();
         } else {
             header("Location: usuarios.php?error=duplicado");
             exit();
         }
-    
-        $stmt->close();
-        
     }
-
-    $stmtCheck->close();
-    $conn->close();
 }
 
+// Lógica para editar usuario
+if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['editar_usuario'])) {
+    $idusuario = $_POST['idusuario'];
+    $nombrecompleto = $_POST['nombrecompleto'];
+    $usuario = $_POST['usuario'];
+    $correo = $_POST['correo'];
+    $telefono = $_POST['telefono'];
+    $idrol = $_POST['idrol'];
+    $activo = isset($_POST['activo']) ? 1 : 0;
+
+    // Solo actualizar la contraseña si se proporcionó una nueva
+    if (!empty($_POST['contrasena'])) {
+        $contrasena = password_hash($_POST['contrasena'], PASSWORD_DEFAULT);
+        $sql = "UPDATE usuarios SET nombrecompleto = ?, usuario = ?, contrasena = ?, correo = ?, telefono = ?, idrol = ?, activo = ? WHERE idusuario = ?";
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param("sssssiii", $nombrecompleto, $usuario, $contrasena, $correo, $telefono, $idrol, $activo, $idusuario);
+    } else {
+        $sql = "UPDATE usuarios SET nombrecompleto = ?, usuario = ?, correo = ?, telefono = ?, idrol = ?, activo = ? WHERE idusuario = ?";
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param("ssssiii", $nombrecompleto, $usuario, $correo, $telefono, $idrol, $activo, $idusuario);
+    }
+
+    if ($stmt->execute()) {
+        header("Location: usuarios.php?exito=2");
+        exit();
+    } else {
+        header("Location: usuarios.php?error=edicion");
+        exit();
+    }
+}
+
+// Lógica para desactivar usuario
+if (isset($_GET['desactivar'])) {
+    $idusuario = $_GET['desactivar'];
+    $sql = "UPDATE usuarios SET activo = 0 WHERE idusuario = ?";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("i", $idusuario);
+
+    if ($stmt->execute()) {
+        header("Location: usuarios.php?exito=3");
+        exit();
+    } else {
+        header("Location: usuarios.php?error=desactivacion&message=" . urlencode($conn->error));
+        exit();
+    }
+}
 ?>
 
 <!DOCTYPE html>
@@ -232,6 +287,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['agregar_usuario'])) {
                 font-size: 13px;
             }
         }
+        /* Estilos para modales */
         .modal {
             display: none;
             position: fixed;
@@ -249,6 +305,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['agregar_usuario'])) {
             padding: 20px;
             border: 1px solid #888;
             width: 50%;
+            border-radius: 15px;
         }
         .close, .close-message {
             color: #aaa;
@@ -273,7 +330,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['agregar_usuario'])) {
             padding: 8px;
             margin-top: 5px;
             border: 1px solid #ccc;
-            border-radius: 4px;
+            border-radius: 8px;
             box-sizing: border-box;
         }
         .modal-content button {
@@ -281,76 +338,68 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['agregar_usuario'])) {
             color: white;
             padding: 10px 15px;
             border: none;
-            border-radius: 4px;
+            border-radius: 8px;
             cursor: pointer;
             margin-top: 10px;
         }
         .modal-content button:hover {
             background-color: #2563eb;
         }
+        /* Estilos para mensajes */
         .mensaje-modal {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background-color: rgba(0,0,0,0.4);
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        z-index: 9999;
-    }
-
-    .mensaje-contenido {
-        background-color: white;
-        border-radius: 10px;
-        padding: 20px 30px;
-        max-width: 400px;
-        width: 90%;
-        box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-        text-align: center;
-        position: relative;
-        animation: fadeIn 0.3s ease-in-out;
-    }
-
-    .mensaje-contenido.success {
-        border-top: 6px solid #28a745;
-    }
-
-    .mensaje-contenido.error {
-        border-top: 6px solid #dc3545;
-    }
-
-    .mensaje-icono {
-        font-size: 40px;
-        margin-bottom: 10px;
-    }
-
-    .mensaje-texto {
-        font-size: 16px;
-        margin-bottom: 20px;
-        color: #333;
-    }
-
-    .mensaje-cerrar {
-        background-color: #007bff;
-        color: white;
-        border: none;
-        padding: 8px 16px;
-        border-radius: 5px;
-        cursor: pointer;
-    }
-
-    .mensaje-cerrar:hover {
-        background-color: #0056b3;
-    }
-
-    @keyframes fadeIn {
-        from { opacity: 0; transform: scale(0.9); }
-        to { opacity: 1; transform: scale(1); }
-    }
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.4);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+        .mensaje-contenido {
+            background-color: white;
+            border-radius: 10px;
+            padding: 20px 30px;
+            max-width: 400px;
+            width: 90%;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            text-align: center;
+            position: relative;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+        .mensaje-contenido.success {
+            border-top: 6px solid #28a745;
+        }
+        .mensaje-contenido.error {
+            border-top: 6px solid #dc3545;
+        }
+        .mensaje-icono {
+            font-size: 40px;
+            margin-bottom: 10px;
+        }
+        .mensaje-texto {
+            font-size: 16px;
+            margin-bottom: 20px;
+            color: #333;
+        }
+        .mensaje-cerrar {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .mensaje-cerrar:hover {
+            background-color: #0056b3;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.9); }
+            to { opacity: 1; transform: scale(1); }
+        }
     </style>
-    
 </head>
 <body>
     <div class="container">
@@ -374,33 +423,31 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['agregar_usuario'])) {
             <table>
                 <thead>
                     <tr>
-                        <th>ID</th>
+                        <th style="display: none;">ID</th>
                         <th>Nombre completo</th>
                         <th>Usuario</th>
                         <th>Email</th>
                         <th>Teléfono</th>
                         <th>Rol</th>
-                        <th>Activo</th>
                         <th>Acciones</th>
                     </tr>
                 </thead>
                 <tbody>
                 <?php while ($row = $result->fetch_assoc()): ?>
                     <tr>
-                        <td><?= htmlspecialchars($row['idusuario']) ?></td>
+                        <td style="display: none;"><?= htmlspecialchars($row['idusuario']) ?></td>
                         <td><?= htmlspecialchars($row['nombrecompleto']) ?></td>
                         <td><?= htmlspecialchars($row['usuario']) ?></td>
                         <td><?= htmlspecialchars($row['correo']) ?></td>
                         <td><?= htmlspecialchars($row['telefono']) ?></td>
                         <td><?= htmlspecialchars($row['nombrerol']) ?></td>
-                        <td><?= $row['activo'] ? 'Sí' : 'No' ?></td>
                         <td align="center">
                             <a href="?editar=<?= $row['idusuario'] ?>" title="Editar" class="action-link">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="#007acc" viewBox="0 0 24 24">
                                     <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1.003 1.003 0 0 0 0-1.42l-2.34-2.34a1.003 1.003 0 0 0-1.42 0l-1.83 1.83 3.75 3.75 1.84-1.82z"/>
                                 </svg>
                             </a>
-                            <a href="?eliminar=<?= $row['idusuario'] ?>" title="Eliminar" class="action-link" onclick="return confirm('¿Eliminar este usuario?')">
+                            <a href="#" title="Desactivar" class="action-link" onclick="abrirModalConfirmacionDesactivar(<?= $row['idusuario'] ?>)">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="#d9534f" viewBox="0 0 24 24">
                                     <path d="M3 6h18v2H3V6zm2 3h14v11a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V9zm3 3v6h2v-6H8zm4 0v6h2v-6h-2zM9 4h6v2H9V4z"/>
                                 </svg>
@@ -417,23 +464,22 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['agregar_usuario'])) {
     <div id="nuevoUsuarioModal" class="modal">
         <div class="modal-content">
             <span class="close" onclick="document.getElementById('nuevoUsuarioModal').style.display='none'">&times;</span>
-            <h2>Agregar Nuevo Usuario</h2>
+            <h2 style="margin-bottom: 20px; color: #004080;">Agregar Nuevo Usuario</h2>
             <form action="usuarios.php" method="post">
-                <label for="nombrecompleto">Nombre Completo:</label>
+                <label for="nombrecompleto">Nombre Completo: * </label>
                 <input type="text" id="nombrecompleto" name="nombrecompleto" required>
-                <label for="usuario">Usuario:</label>
+                <label for="usuario">Usuario: * </label>
                 <input type="text" id="usuario" name="usuario" required>
-                <label for="contrasena">Contraseña:</label>
+                <label for="contrasena">Contraseña: * </label>
                 <input type="password" id="contrasena" name="contrasena" required>
                 <label for="correo">Correo:</label>
                 <input type="email" id="correo" name="correo">
                 <label for="telefono">Teléfono:</label>
                 <input type="text" id="telefono" name="telefono">
-                <label for="idrol">Rol:</label>
+                <label for="idrol">Rol: * </label>
                 <select id="idrol" name="idrol" required>
                     <option value="">Seleccione un rol</option>
                     <?php
-                    // Reiniciar el puntero del resultado de roles
                     $resultRoles->data_seek(0);
                     while ($rowRol = $resultRoles->fetch_assoc()): ?>
                         <option value="<?= htmlspecialchars($rowRol['idrol']) ?>">
@@ -446,70 +492,158 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['agregar_usuario'])) {
         </div>
     </div>
 
-    <!-- Modal para mensajes -->
-    <div id="mensajeModal" class="modal">
+    <!-- Modal para editar usuario -->
+    <div id="editarUsuarioModal" class="modal">
         <div class="modal-content">
-            <span class="close-message" onclick="document.getElementById('mensajeModal').style.display='none'">&times;</span>
-            <p id="mensajeTexto"></p>
+            <span class="close" onclick="document.getElementById('editarUsuarioModal').style.display='none'">&times;</span>
+            <h2 style="margin-bottom: 20px; color: #004080;">Editar Usuario</h2>
+            <form action="usuarios.php" method="post">
+                <input type="hidden" id="editar_idusuario" name="idusuario">
+                <label for="editar_nombrecompleto">Nombre Completo:</label>
+                <input type="text" id="editar_nombrecompleto" name="nombrecompleto" required>
+                <label for="editar_usuario">Usuario:</label>
+                <input type="text" id="editar_usuario" name="usuario" required>
+                <label for="editar_contrasena">Contraseña (dejar en blanco para no cambiar):</label>
+                <input type="password" id="editar_contrasena" name="contrasena">
+                <label for="editar_correo">Correo:</label>
+                <input type="email" id="editar_correo" name="correo">
+                <label for="editar_telefono">Teléfono:</label>
+                <input type="text" id="editar_telefono" name="telefono">
+                <label for="editar_idrol">Rol:</label>
+                <select id="editar_idrol" name="idrol" required>
+                    <option value="">Seleccione un rol</option>
+                    <?php
+                    $resultRoles->data_seek(0);
+                    while ($rowRol = $resultRoles->fetch_assoc()): ?>
+                        <option value="<?= htmlspecialchars($rowRol['idrol']) ?>">
+                            <?= htmlspecialchars($rowRol['nombrerol']) ?>
+                        </option>
+                    <?php endwhile; ?>
+                </select>
+                <button type="submit" name="editar_usuario">Guardar Cambios</button>
+            </form>
         </div>
     </div>
 
-        <script>
-            // Obtener el modal de nuevo usuario
-            var modal = document.getElementById("nuevoUsuarioModal");
-            // Obtener el botón que abre el modal de nuevo usuario
-            var btn = document.querySelector("a.btn");
+    <!-- Modal de confirmación de desactivación -->
+    <div id="confirmarDesactivarModal" class="modal">
+    <div class="modal-content" style="text-align: center; width: auto; max-width: 400px;">
+    <h3 style="margin-bottom: 20px; color: #004080;">Confirmar Borrado</h3>
+        <p style="margin-bottom: 30px;">¿Estás seguro de que quieres borrar este usuario?</p>
+        <div style="display: inline-flex; justify-content: center; gap: 20px; margin: 0 auto;">
+    <button id="btnConfirmarDesactivar"
+            style="background-color: #d9534f; color: white; padding: 8px 20px; border: none; border-radius: 4px; cursor: pointer; width: 120px;">
+        Borrar
+    </button>
+    <button id="btnCancelarDesactivar"
+            style="background-color: #ccc; color: #333; padding: 8px 20px; border: none; border-radius: 4px; cursor: pointer; width: 120px;">
+        Cancelar
+    </button>
+</div>
 
-            // Cuando el usuario hace clic en el botón, abre el modal de nuevo usuario
-            btn.onclick = function(event) {
-                event.preventDefault();
-                modal.style.display = "block";
+    </div>
+</div>
+
+
+    <script>
+        // Función para mostrar mensajes
+        function mostrarMensaje(mensaje, tipo = 'success') {
+            const overlay = document.createElement('div');
+            overlay.className = 'mensaje-modal';
+            const contenido = document.createElement('div');
+            contenido.className = `mensaje-contenido ${tipo}`;
+            const icono = document.createElement('div');
+            icono.className = 'mensaje-icono';
+            icono.innerHTML = tipo === 'success' ? '✅' : '❌';
+            const texto = document.createElement('div');
+            texto.className = 'mensaje-texto';
+            texto.innerText = mensaje;
+            const botonCerrar = document.createElement('button');
+            botonCerrar.className = 'mensaje-cerrar';
+            botonCerrar.innerText = 'Cerrar';
+            botonCerrar.onclick = () => {
+                document.body.removeChild(overlay);
+            };
+            contenido.appendChild(icono);
+            contenido.appendChild(texto);
+            contenido.appendChild(botonCerrar);
+            overlay.appendChild(contenido);
+            document.body.appendChild(overlay);
+        }
+
+        // Función para abrir el modal de edición
+        function abrirModalEdicion(idusuario, nombrecompleto, usuario, correo, telefono, idrol) {
+            document.getElementById('editar_idusuario').value = idusuario;
+            document.getElementById('editar_nombrecompleto').value = nombrecompleto;
+            document.getElementById('editar_usuario').value = usuario;
+            document.getElementById('editar_correo').value = correo;
+            document.getElementById('editar_telefono').value = telefono;
+            document.getElementById('editar_idrol').value = idrol;
+            document.getElementById('editarUsuarioModal').style.display = 'block';
+        }
+
+        // Manejar clics en los enlaces de edición
+        document.querySelectorAll('a[href*="?editar="]').forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                const idusuario = this.href.split('=')[1];
+                const row = this.closest('tr');
+                const nombrecompleto = row.cells[1].textContent;
+                const usuario = row.cells[2].textContent;
+                const correo = row.cells[3].textContent;
+                const telefono = row.cells[4].textContent;
+                const rol = row.cells[5].textContent;
+
+                const idrol = <?php
+                    $roles = array();
+                    $resultRoles->data_seek(0);
+                    while ($rowRol = $resultRoles->fetch_assoc()) {
+                        $roles[$rowRol['nombrerol']] = $rowRol['idrol'];
+                    }
+                    echo json_encode($roles);
+                ?>[rol];
+
+                abrirModalEdicion(idusuario, nombrecompleto, usuario, correo, telefono, idrol);
+            });
+        });
+
+        // Variable para almacenar el ID del usuario a desactivar
+        let usuarioADesactivar = null;
+
+        // Función para abrir el modal de confirmación de desactivación
+        function abrirModalConfirmacionDesactivar(idusuario) {
+            usuarioADesactivar = idusuario;
+            document.getElementById('confirmarDesactivarModal').style.display = 'block';
+        }
+
+        // Manejar el botón de confirmar desactivación
+        document.getElementById('btnConfirmarDesactivar').addEventListener('click', function() {
+            if (usuarioADesactivar) {
+                window.location.href = `?desactivar=${usuarioADesactivar}`;
             }
+        });
 
-            function mostrarMensaje(mensaje, tipo = 'success') {
-                const overlay = document.createElement('div');
-                overlay.className = 'mensaje-modal';
+        // Manejar el botón de cancelar desactivación
+        document.getElementById('btnCancelarDesactivar').addEventListener('click', function() {
+            document.getElementById('confirmarDesactivarModal').style.display = 'none';
+            usuarioADesactivar = null;
+        });
 
-                const contenido = document.createElement('div');
-                contenido.className = `mensaje-contenido ${tipo}`;
+        // Manejar el botón de nuevo usuario
+        document.querySelector("a.btn").onclick = function(event) {
+            event.preventDefault();
+            document.getElementById("nuevoUsuarioModal").style.display = "block";
+        };
 
-                const icono = document.createElement('div');
-                icono.className = 'mensaje-icono';
-                icono.innerHTML = tipo === 'success' ? '✅' : '❌';
-
-                const texto = document.createElement('div');
-                texto.className = 'mensaje-texto';
-                texto.innerText = mensaje;
-
-                const botonCerrar = document.createElement('button');
-                botonCerrar.className = 'mensaje-cerrar';
-                botonCerrar.innerText = 'Cerrar';
-                botonCerrar.onclick = () => {
-                    document.body.removeChild(overlay);
-                };
-
-                contenido.appendChild(icono);
-                contenido.appendChild(texto);
-                contenido.appendChild(botonCerrar);
-                overlay.appendChild(contenido);
-                document.body.appendChild(overlay);
-            }
-    </script>
-
-<?php if (!empty($mensajeError)): ?>
-<script>
-    window.onload = function () {
-        <?php $tipoMensaje = (strpos($mensajeError, 'correctamente') !== false) ? 'success' : 'error'; ?>
-        mostrarMensaje("<?= htmlspecialchars($mensajeError) ?>", "<?= $tipoMensaje ?>");
-
-        <?php if ($tipoMensaje === 'error'): ?>
-            // Si hubo error (como usuario existente), reabre el modal
-            document.getElementById('nuevoUsuarioModal').style.display = 'block';
+        <?php if (!empty($mensajeError)): ?>
+            window.onload = function () {
+                <?php $tipoMensaje = (strpos($mensajeError, 'correctamente') !== false) ? 'success' : 'error'; ?>
+                mostrarMensaje("<?= htmlspecialchars($mensajeError) ?>", "<?= $tipoMensaje ?>");
+                <?php if ($tipoMensaje === 'error'): ?>
+                    document.getElementById('nuevoUsuarioModal').style.display = 'block';
+                <?php endif; ?>
+            };
         <?php endif; ?>
-    };
-</script>
-<?php endif; ?>
-
-
+    </script>
 </body>
 </html>
