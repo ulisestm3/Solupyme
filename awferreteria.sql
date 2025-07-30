@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 30-07-2025 a las 10:59:30
+-- Tiempo de generación: 30-07-2025 a las 20:47:27
 -- Versión del servidor: 10.4.32-MariaDB
 -- Versión de PHP: 8.2.12
 
@@ -43,8 +43,10 @@ CREATE TABLE `permisos` (
 --
 
 INSERT INTO `permisos` (`idpermiso`, `idrol`, `pagina`, `activo`, `usuarioregistra`, `fecharegistro`, `usuarioactualiza`, `fechaactualizacion`) VALUES
-(8, 1, 'roles.php', b'1', 1, '2025-07-30 02:14:38', NULL, NULL),
-(9, 1, 'usuarios.php', b'1', 1, '2025-07-30 02:14:38', NULL, NULL);
+(17, 1, 'asignar_permisos.php', b'1', 1, '2025-07-30 12:44:21', NULL, NULL),
+(18, 1, 'permisos_por_rol.php', b'1', 1, '2025-07-30 12:38:10', NULL, NULL),
+(19, 1, 'roles.php', b'1', 1, '2025-07-30 12:38:10', NULL, NULL),
+(20, 1, 'usuarios.php', b'1', 1, '2025-07-30 12:38:10', NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -88,6 +90,8 @@ CREATE TABLE `roles_paginas` (
 --
 
 INSERT INTO `roles_paginas` (`idrol`, `pagina`, `activo`) VALUES
+(1, 'asignar_permisos.php', b'1'),
+(1, 'permisos_por_rol.php', b'1'),
 (1, 'roles.php', b'1'),
 (1, 'usuarios.php', b'1');
 
@@ -184,7 +188,7 @@ ALTER TABLE `usuarios`
 -- AUTO_INCREMENT de la tabla `permisos`
 --
 ALTER TABLE `permisos`
-  MODIFY `idpermiso` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
+  MODIFY `idpermiso` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=21;
 
 --
 -- AUTO_INCREMENT de la tabla `roles`
