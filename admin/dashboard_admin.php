@@ -11,6 +11,7 @@ if (!isset($_SESSION['idusuario'])) {
 // Variables para mostrar en la bienvenida
 $usuarioId = $_SESSION['idusuario'];
 $usuarioNombre = $_SESSION['nombrecompleto'];
+$rolId = $_SESSION['idrol']; 
 $rolNombre = ''; // Aquí podrías traer el nombre del rol desde BD o definir según idrol
 
 // Ejemplo básico para rolNombre (puedes mejorar esto con consulta real)
@@ -214,12 +215,13 @@ switch ($_SESSION['idrol']) {
             <button id="toggleSidebar" class="hamburger-btn" title="Mostrar/Ocultar menú">☰</button>
             <h2>AWFerreteria</h2>
             <nav>
+                <?php if ($_SESSION['idrol'] == 1): ?>
                 <button class="accordion-btn">Gestión de usuarios</button>
                 <div class="accordion-panel">
                     <a href="../roles/usuarios.php">Usuarios</a>
                     <a href="../roles/roles.php">Roles</a>
                 </div>
-
+                <?php endif; ?>
                 <button class="accordion-btn">Gestión de productos</button>
                 <div class="accordion-panel">
                     <a href="/admin/productos/nuevo.php">Agregar producto</a>
@@ -242,7 +244,8 @@ switch ($_SESSION['idrol']) {
             <div class="welcome-message">
                 Bienvenido, <strong><?= htmlspecialchars($usuarioNombre); ?></strong>.<br />
                 Tu rol es: <strong><?= htmlspecialchars($rolNombre); ?></strong>.<br />
-                ID de usuario: <strong><?= $usuarioId; ?></strong>
+                ID de usuario: <strong><?= $usuarioId; ?></strong>.<br/>
+                ID de rol: <strong><?= $rolId; ?></strong>
             </div>
 
             <section>

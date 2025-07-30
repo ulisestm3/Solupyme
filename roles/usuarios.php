@@ -1,6 +1,7 @@
 <?php
 require_once('../config/database.php');
-session_start();
+require_once('../config/seguridad.php');
+verificarRol([1]); // Solo administradores pueden acceder al CRUD de usuarios
 
 // Mensajes de éxito y error
 $mensajes = [
@@ -50,7 +51,7 @@ $result = $conn->query($sql);
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['agregar_usuario'])) {
     $nombrecompleto = $_POST['nombrecompleto'];
     $usuario = $_POST['usuario'];
-    $contrasena = password_hash($_POST['contrasena'], PASSWORD_DEFAULT);
+    $contrasena = hash('sha256', $_POST['contrasena']); // Cambiado a hash('sha256')
     $correo = $_POST['correo'];
     $telefono = $_POST['telefono'];
     $idrol = $_POST['idrol'];
@@ -77,10 +78,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['agregar_usuario'])) {
             header("Location: usuarios.php?exito=1");
             exit();
         } else {
-            header("Location: usuarios.php?error=duplicado");
+            header("Location: usuarios.php?error=db&message=" . urlencode($conn->error));
             exit();
         }
     }
+    $stmtCheck->close();
 }
 
 // Lógica para editar usuario
@@ -91,9 +93,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['editar_usuario'])) {
     $correo = $_POST['correo'];
     $telefono = $_POST['telefono'];
     $idrol = $_POST['idrol'];
-    $activo = isset($_POST['activo']) ? 1 : 0;
 
-    // Validación para el usuario con ID 1
+    // Validación para el usuario con ID 1 (usuario protegido)
     if ($idusuario == 1) {
         header("Location: usuarios.php?error=usuario_protegido");
         exit();
@@ -101,23 +102,24 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['editar_usuario'])) {
 
     // Solo actualizar la contraseña si se proporcionó una nueva
     if (!empty($_POST['contrasena'])) {
-        $contrasena = password_hash($_POST['contrasena'], PASSWORD_DEFAULT);
-        $sql = "UPDATE usuarios SET nombrecompleto = ?, usuario = ?, contrasena = ?, correo = ?, telefono = ?, idrol = ?, activo = ? WHERE idusuario = ?";
+        $contrasena = hash('sha256', $_POST['contrasena']); // Cambiado a hash('sha256')
+        $sql = "UPDATE usuarios SET nombrecompleto = ?, usuario = ?, contrasena = ?, correo = ?, telefono = ?, idrol = ? WHERE idusuario = ?";
         $stmt = $conn->prepare($sql);
-        $stmt->bind_param("sssssiii", $nombrecompleto, $usuario, $contrasena, $correo, $telefono, $idrol, $activo, $idusuario);
+        $stmt->bind_param("sssssii", $nombrecompleto, $usuario, $contrasena, $correo, $telefono, $idrol, $idusuario);
     } else {
-        $sql = "UPDATE usuarios SET nombrecompleto = ?, correo = ?, telefono = ?, idrol = ?, activo = ? WHERE idusuario = ?";
+        $sql = "UPDATE usuarios SET nombrecompleto = ?, usuario = ?, correo = ?, telefono = ?, idrol = ? WHERE idusuario = ?";
         $stmt = $conn->prepare($sql);
-        $stmt->bind_param("ssssii", $nombrecompleto, $correo, $telefono, $idrol, $activo, $idusuario);
+        $stmt->bind_param("ssssii", $nombrecompleto, $usuario, $correo, $telefono, $idrol, $idusuario);
     }
 
     if ($stmt->execute()) {
         header("Location: usuarios.php?exito=2");
         exit();
     } else {
-        header("Location: usuarios.php?error=edicion");
+        header("Location: usuarios.php?error=edicion&message=" . urlencode($conn->error));
         exit();
     }
+    $stmt->close();
 }
 
 // Lógica para desactivar usuario
@@ -142,7 +144,11 @@ if (isset($_GET['desactivar'])) {
         exit();
     }
 }
+
+// Cerrar la conexión al final del script
+$conn->close();
 ?>
+
 
 
 <!DOCTYPE html>

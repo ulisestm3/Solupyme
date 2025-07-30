@@ -17,7 +17,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     try {
         $conn = getConnection();
 
-        $stmt = $conn->prepare("SELECT * FROM usuarios WHERE usuario = ? AND activo = b'1' LIMIT 1");
+        $stmt = $conn->prepare("
+        SELECT u.*, r.nombrerol 
+        FROM usuarios u
+        JOIN roles r ON u.idrol = r.idrol
+        WHERE u.usuario = ? 
+          AND u.activo = b'1' 
+          AND r.activo = b'1'
+        LIMIT 1
+    ");
+    
         $stmt->bind_param("s", $usuario);
         $stmt->execute();
         $result = $stmt->get_result();
@@ -31,6 +40,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $_SESSION['nombrecompleto'] = $user['nombrecompleto'];
                 $_SESSION['usuario'] = $user['usuario'];
                 $_SESSION['idrol'] = $user['idrol'];
+                $_SESSION['nombrerol'] = $user['nombrerol']; 
 
                 header("Location: ../admin/dashboard_admin.php");
                 exit();

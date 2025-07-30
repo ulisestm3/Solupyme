@@ -1,6 +1,8 @@
 <?php
 require_once('../config/database.php');
-session_start();
+require_once('../config/seguridad.php');
+verificarRol([1]); // Solo administradores pueden acceder al CRUD de roles
+
 
 // Mensajes de éxito y error
 $mensajes = [
