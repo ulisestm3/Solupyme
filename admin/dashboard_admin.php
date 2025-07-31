@@ -198,7 +198,7 @@ $rolNombre = $_SESSION['nombrerol'];
 </head>
 <body>
     <div class="container">
-        <?php include '../admin/sidebar.php'; ?>
+        <?php include '../includes/sidebar.php'; ?>
 
 
         <main class="main-content">
@@ -217,15 +217,20 @@ $rolNombre = $_SESSION['nombrerol'];
                     <li><a href="../roles/usuarios.php">Usuarios</a></li>
                     <li><a href="../roles/roles.php">Roles</a></li>
                     <li><a href="../admin/permisos_por_rol.php">Asignar Páginas</a></li>
-                    <li><a href="../roles/asignar_permisos.php">Asignar Permisos</a></li>
+                    <li><a href="../roles/asignar_permisos.php">Permisos Páginas</a></li>
+                    <li><a href="../admin/asignar_menu_usuario.php">Asignar Menús</a></li>
+                    <li><a href="../roles/permisos_usuarios_menus.php">Permisos Menús</a></li>
+                    
                 </ul>
             </section>
 
             <section>
                 <h2>Gestión de productos</h2>
                 <ul>
-                    <li><a href="/admin/productos/nuevo.php">Agregar producto</a></li>
-                    <li><a href="/admin/productos/listado.php">Listar productos</a></li>
+                    <li><a href="../inventario/productos.php">Productos</a></li>
+                    <li><a href="../inventario/categorias.php">Caterorías</a></li>
+                    <li><a href="../inventario/movimientos.php">Movimientos</a></li>
+                    <li><a href="../inventario/stock_bajo.php">Stock Bajo</a></li>
                 </ul>
             </section>
 

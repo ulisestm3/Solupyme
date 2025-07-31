@@ -38,8 +38,10 @@ $clavesMenus = array_column($menus, 'clave');
         <?php if (in_array('gestion_productos', $clavesMenus)): ?>
         <button class="accordion-btn">Gestión de productos</button>
         <div class="accordion-panel">
-            <a href="/admin/productos/nuevo.php">Agregar producto</a>
-            <a href="/admin/productos/listado.php">Listar productos</a>
+            <a href="../inventario/productos.php">Productos</a>
+            <a href="../inventario/categorias.php">Caterorías</a>
+            <a href="../inventario/movimientos.php">Movimientos</a>
+            <a href="../inventario/stock_bajo.php">Stock Bajo</a>
         </div>
         <?php endif; ?>
 
