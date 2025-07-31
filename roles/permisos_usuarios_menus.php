@@ -5,35 +5,35 @@ verificarPermisoPagina();
 
 $conn = getConnection();
 // Obtener roles
-$roles = $conn->query("SELECT idrol, nombrerol FROM roles WHERE activo = b'1'")->fetch_all(MYSQLI_ASSOC);
+$usuarios = $conn->query("SELECT idusuario, usuario FROM usuarios WHERE activo = b'1'")->fetch_all(MYSQLI_ASSOC);
 // Determinar el rol seleccionado: el enviado por GET o el primero por defecto
-$idrolSeleccionado = isset($_GET['idrol']) && $_GET['idrol'] != ''
-    ? (int) $_GET['idrol']
-    : ($roles[0]['idrol'] ?? 0);  // Si no hay roles, 0
+$idusuarioSeleccionado = isset($_GET['idusuario']) && $_GET['idusuario'] != ''
+    ? (int) $_GET['idusuario']
+    : ($usuarios[0]['idusuario'] ?? 0);  // Si no hay roles, 0
 // Obtener páginas asignadas al rol seleccionado
-$paginas = [];
-if ($idrolSeleccionado > 0) {
-    $res = $conn->query("SELECT pagina FROM roles_paginas WHERE idrol = $idrolSeleccionado AND activo = b'1'");
+$claves = [];
+if ($idusuarioSeleccionado > 0) {
+    $res = $conn->query("SELECT clave FROM usuarios_menus WHERE idusuario = $idusuarioSeleccionado AND activo = b'1'");
     while ($row = $res->fetch_assoc()) {
-        $paginas[] = $row['pagina'];
+        $claves[] = $row['clave'];
     }
 }
 // Guardar permisos si se envió el formulario
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $idrol = isset($_POST['idrol']) ? (int)$_POST['idrol'] : 0;
+    $idusuario = isset($_POST['idusuario']) ? (int)$_POST['idusuario'] : 0;
     if ($idrol === 0) {
-        header("Location: asignar_permisos.php?error=seleccionar_rol");
+        header("Location: permisos_usuarios_menus.php?error=seleccionar_usuario");
         exit();
     }
-    $paginasSeleccionadas = $_POST['paginas'] ?? [];
+    $clavesSeleccionadas = $_POST['claves'] ?? [];
     $usuarioRegistra = $_SESSION['idusuario'];
-    $conn->query("DELETE FROM permisos WHERE idrol = $idrol");
-    $stmt = $conn->prepare("INSERT INTO permisos (idrol, pagina, activo, usuarioregistra, fecharegistro) VALUES (?, ?, b'1', ?, NOW())");
-    foreach ($paginasSeleccionadas as $pagina) {
-        $stmt->bind_param("isi", $idrol, $pagina, $usuarioRegistra);
+    $conn->query("DELETE FROM permisos_menus WHERE idusuario = $idusuario");
+    $stmt = $conn->prepare("INSERT INTO permisos_menus (idusuario, clave, activo, usuarioregistra, fecharegistro) VALUES (?, ?, b'1', ?, NOW())");
+    foreach ($clavesSeleccionadas as $clave) {
+        $stmt->bind_param("isi", $idusuario, $clave, $usuarioRegistra);
         $stmt->execute();
     }
-    header("Location: asignar_permisos.php?exito=1&idrol=$idrol");
+    header("Location: permisos_usuarios_menus.php?exito=1&idusuario=$idusuario");
     exit();
 }
 ?>
@@ -127,13 +127,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             margin: 0 auto;
         }
         /* Form styles */
-        .select-rol {
+        .select-usuario {
             display: flex;
             align-items: center;
             gap: 0.5rem;
             margin-bottom: 1.5rem;
         }
-        .select-rol label {
+        .select-usuario label {
             font-weight: bold;
             color: #004080;
             white-space: nowrap;
@@ -228,7 +228,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 padding: 1.5rem;
                 margin: 0 0.5rem;
             }
-            .select-rol {
+            .select-usuario {
                 flex-direction: column;
                 align-items: flex-start;
             }
@@ -271,39 +271,39 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <a href="../auth/logout.php" class="logout-btn">Cerrar sesión</a>
         </aside>
         <main class="main-content">
-            <h2>Asignar Permisos a Página</h2>
+            <h2>Asignar Permisos a Menús</h2>
             <div class="card-permisos">
                 <?php if (isset($_GET['exito'])): ?>
                     <p class="success-message">Permisos actualizados correctamente</p>
                 <?php endif; ?>
                 <form method="GET">
-                    <div class="select-rol">
-                        <label for="idrol">Selecciona un rol:</label>
-                        <select name="idrol" id="idrol" required onchange="this.form.submit()">
-                           <?php foreach ($roles as $rol): ?>
-                                <option value="<?= $rol['idrol'] ?>" <?= $rol['idrol'] == $idrolSeleccionado ? 'selected' : '' ?>>
-                                    <?= $rol['nombrerol'] ?>
+                    <div class="select-usuario">
+                        <label for="idusuario">Selecciona un usuario:</label>
+                        <select name="idusuario" id="idusuario" required onchange="this.form.submit()">
+                           <?php foreach ($usuarios as $usuario): ?>
+                                <option value="<?= $usuario['idusuario'] ?>" <?= $usuario['idusuario'] == $idusuarioSeleccionado ? 'selected' : '' ?>>
+                                    <?= $usuario['usuario'] ?>
                                 </option>
                             <?php endforeach; ?>
                         </select>
                     </div>
                 </form>
-                <?php if ($idrolSeleccionado > 0):
+                <?php if ($idusuarioSeleccionado > 0):
                     $permisosActuales = [];
-                    $res = $conn->query("SELECT pagina FROM vista_roles_permisos WHERE idrol = $idrolSeleccionado AND activo = b'1'");
+                    $res = $conn->query("SELECT clave FROM vista_permisos_menus WHERE idusuario = $idusuarioSeleccionado AND activo = b'1'");
                     while ($row = $res->fetch_assoc()) {
-                        $permisosActuales[] = $row['pagina'];
+                        $permisosActuales[] = $row['clave'];
                     }
                 ?>
                 <form method="POST">
-                    <input type="hidden" name="idrol" value="<?= $idrolSeleccionado ?>">
-                    <h3>Páginas disponibles:</h3>
+                    <input type="hidden" name="idusuario" value="<?= $idusuarioSeleccionado ?>">
+                    <h3>Claves disponibles:</h3>
                     <div class="checkbox-group">
-                        <?php foreach ($paginas as $pagina): ?>
+                        <?php foreach ($claves as $clave): ?>
                             <div class="checkbox-item">
-                                <input type="checkbox" name="paginas[]" id="pagina-<?= $pagina ?>" value="<?= $pagina ?>"
-                                    <?= in_array($pagina, $permisosActuales) ? 'checked' : '' ?>>
-                                <label for="pagina-<?= $pagina ?>"><?= $pagina ?></label>
+                                <input type="checkbox" name="claves[]" id="clave-<?= $clave ?>" value="<?= $clave ?>"
+                                    <?= in_array($clave, $permisosActuales) ? 'checked' : '' ?>>
+                                <label for="clave-<?= $clave ?>"><?= $clave ?></label>
                             </div>
                         <?php endforeach; ?>
                     </div>

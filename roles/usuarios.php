@@ -427,11 +427,30 @@ $conn->close();
         <aside class="sidebar">
             <h2>AWFerreteria</h2>
             <nav>
+                <?php
+                    $idusuario = $_SESSION['idusuario'];
+                    $menus = obtenerMenusUsuario($idusuario);
+                    $clavesMenus = array_column($menus, 'clave');
+                ?>
                 <a href="../admin/dashboard_admin.php">Dashboard</a>
-                <a href="../roles/usuarios.php">Usuarios</a>
-                <a href="../roles/roles.php">Roles</a>
-                <a href="../admin/permisos_por_rol.php">Asignar Páginas</a>
-                <a href="../roles/asignar_permisos.php">Asignar Permisos</a>
+                <?php if (in_array('usuarios', $clavesMenus)): ?>
+                    <a href="../roles/usuarios.php">Usuarios</a>
+                <?php endif; ?>
+                <?php if (in_array('roles', $clavesMenus)): ?>
+                    <a href="../roles/roles.php">Roles</a>
+                <?php endif; ?>
+                <?php if (in_array('asignar_pagina', $clavesMenus)): ?>
+                    <a href="../admin/permisos_por_rol.php">Asignar Páginas</a>
+                <?php endif; ?>
+                <?php if (in_array('permiso_pagina', $clavesMenus)): ?>
+                    <a href="../roles/asignar_permisos.php">Permisos Páginas</a>
+                <?php endif; ?>
+                <?php if (in_array('asignar_menu', $clavesMenus)): ?>
+                    <a href="../admin/asignar_menu_usuario.php">Asignar Menús</a>
+                <?php endif; ?>
+                <?php if (in_array('permiso_menu', $clavesMenus)): ?>
+                    <a href="../roles/permisos_usuarios_menus.php">Permisos Menús</a>
+                <?php endif; ?>
             </nav>
             <a href="../auth/logout.php" class="logout-btn">Cerrar sesión</a>
         </aside>

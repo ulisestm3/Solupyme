@@ -8,11 +8,12 @@ $conn = getConnection();
 $roles = $conn->query("SELECT idrol, nombrerol FROM roles WHERE activo = b'1'")->fetch_all(MYSQLI_ASSOC);
 // Lista de páginas permitidas
 $paginasDisponibles = [
-    'dashboard_admin.php',
     'permisos_por_rol.php',
     'asignar_permisos.php',
     'roles.php',
-    'usuarios.php'
+    'usuarios.php',
+    'asignar_menu_usuario.php',
+    'permisos_usuarios_menus.php'
 ];
 $idrolSeleccionado = $_GET['idrol'] ?? $roles[0]['idrol'];
 // Obtener permisos actuales del rol
@@ -228,11 +229,32 @@ $paginasPermitidas = array_column($result->fetch_all(MYSQLI_ASSOC), 'pagina');
         <aside class="sidebar">
             <h2>AWFerreteria</h2>
             <nav>
+            <nav>
+                <?php
+                    $idusuario = $_SESSION['idusuario'];
+                    $menus = obtenerMenusUsuario($idusuario);
+                    $clavesMenus = array_column($menus, 'clave');
+                ?>
                 <a href="../admin/dashboard_admin.php">Dashboard</a>
-                <a href="../roles/usuarios.php">Usuarios</a>
-                <a href="../roles/roles.php">Roles</a>
-                <a href="../admin/permisos_por_rol.php">Asignar Páginas</a>
-                <a href="../roles/asignar_permisos.php">Asignar Permisos</a>
+                <?php if (in_array('usuarios', $clavesMenus)): ?>
+                    <a href="../roles/usuarios.php">Usuarios</a>
+                <?php endif; ?>
+                <?php if (in_array('roles', $clavesMenus)): ?>
+                    <a href="../roles/roles.php">Roles</a>
+                <?php endif; ?>
+                <?php if (in_array('asignar_pagina', $clavesMenus)): ?>
+                    <a href="../admin/permisos_por_rol.php">Asignar Páginas</a>
+                <?php endif; ?>
+                <?php if (in_array('permiso_pagina', $clavesMenus)): ?>
+                    <a href="../roles/asignar_permisos.php">Permisos Páginas</a>
+                <?php endif; ?>
+                <?php if (in_array('asignar_menu', $clavesMenus)): ?>
+                    <a href="../admin/asignar_menu_usuario.php">Asignar Menús</a>
+                <?php endif; ?>
+                <?php if (in_array('permiso_menu', $clavesMenus)): ?>
+                    <a href="../roles/permisos_usuarios_menus.php">Permisos Menús</a>
+                <?php endif; ?>
+            </nav>
             </nav>
             <a href="../auth/logout.php" class="logout-btn">Cerrar sesión</a>
         </aside>

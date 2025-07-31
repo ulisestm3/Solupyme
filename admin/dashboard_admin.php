@@ -198,34 +198,8 @@ $rolNombre = $_SESSION['nombrerol'];
 </head>
 <body>
     <div class="container">
-        <aside class="sidebar">
-            <button id="toggleSidebar" class="hamburger-btn" title="Mostrar/Ocultar menú">☰</button>
-            <h2>AWFerreteria</h2>
-            <nav>
-                <?php if ($_SESSION['idrol'] == 1): ?>
-                <button class="accordion-btn">Gestión de usuarios</button>
-                <div class="accordion-panel">
-                    <a href="../roles/usuarios.php">Usuarios</a>
-                    <a href="../roles/roles.php">Roles</a>
-                    <a href="../admin/permisos_por_rol.php">Asignar Páginas</a>
-                    <a href="../roles/asignar_permisos.php">Asignar Permisos</a>
-                </div>
-                <?php endif; ?>
-                <button class="accordion-btn">Gestión de productos</button>
-                <div class="accordion-panel">
-                    <a href="/admin/productos/nuevo.php">Agregar producto</a>
-                    <a href="/admin/productos/listado.php">Listar productos</a>
-                </div>
+        <?php include '../admin/sidebar.php'; ?>
 
-                <button class="accordion-btn">Auditoría y actividad</button>
-                <div class="accordion-panel">
-                    <a href="/admin/logs/authlog.php">Ver AuthLog</a>
-                    <a href="/admin/reset/listado.php">Solicitudes recuperación</a>
-                </div>
-            </nav>
-
-            <a href="../auth/logout.php" class="logout-btn">Cerrar sesión</a>
-        </aside>
 
         <main class="main-content">
 
