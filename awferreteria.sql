@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 30-07-2025 a las 20:47:27
+-- Tiempo de generación: 31-07-2025 a las 08:14:55
 -- Versión del servidor: 10.4.32-MariaDB
 -- Versión de PHP: 8.2.12
 
@@ -33,20 +33,53 @@ CREATE TABLE `permisos` (
   `pagina` varchar(255) NOT NULL,
   `activo` bit(1) NOT NULL DEFAULT b'1',
   `usuarioregistra` int(11) DEFAULT NULL,
-  `fecharegistro` datetime DEFAULT current_timestamp(),
-  `usuarioactualiza` int(11) DEFAULT NULL,
-  `fechaactualizacion` datetime DEFAULT NULL
+  `fecharegistro` datetime DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Volcado de datos para la tabla `permisos`
 --
 
-INSERT INTO `permisos` (`idpermiso`, `idrol`, `pagina`, `activo`, `usuarioregistra`, `fecharegistro`, `usuarioactualiza`, `fechaactualizacion`) VALUES
-(17, 1, 'asignar_permisos.php', b'1', 1, '2025-07-30 12:44:21', NULL, NULL),
-(18, 1, 'permisos_por_rol.php', b'1', 1, '2025-07-30 12:38:10', NULL, NULL),
-(19, 1, 'roles.php', b'1', 1, '2025-07-30 12:38:10', NULL, NULL),
-(20, 1, 'usuarios.php', b'1', 1, '2025-07-30 12:38:10', NULL, NULL);
+INSERT INTO `permisos` (`idpermiso`, `idrol`, `pagina`, `activo`, `usuarioregistra`, `fecharegistro`) VALUES
+(44, 1, 'asignar_menu_usuario.php', b'1', 1, '2025-07-30 22:33:04'),
+(45, 1, 'asignar_permisos.php', b'1', 1, '2025-07-30 22:33:04'),
+(46, 1, 'permisos_por_rol.php', b'1', 1, '2025-07-30 22:33:04'),
+(47, 1, 'permisos_usuarios_menus.php', b'1', 1, '2025-07-30 22:33:04'),
+(48, 1, 'roles.php', b'1', 1, '2025-07-30 22:33:04'),
+(49, 1, 'usuarios.php', b'1', 1, '2025-07-30 22:33:04'),
+(54, 2, 'roles.php', b'1', 1, '2025-07-30 23:59:58'),
+(55, 2, 'usuarios.php', b'1', 1, '2025-07-30 23:59:58');
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `permisos_menus`
+--
+
+CREATE TABLE `permisos_menus` (
+  `idpermisomenu` int(11) NOT NULL,
+  `idusuario` int(11) NOT NULL,
+  `clave` varchar(255) NOT NULL,
+  `activo` bit(1) NOT NULL,
+  `usuarioregistra` int(11) DEFAULT NULL,
+  `fecharegistro` datetime DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Volcado de datos para la tabla `permisos_menus`
+--
+
+INSERT INTO `permisos_menus` (`idpermisomenu`, `idusuario`, `clave`, `activo`, `usuarioregistra`, `fecharegistro`) VALUES
+(35, 2, 'gestion_usuarios', b'1', 1, '2025-07-30 23:59:52'),
+(36, 2, 'roles', b'1', 1, '2025-07-30 23:59:52'),
+(37, 2, 'usuarios', b'1', 1, '2025-07-30 23:59:52'),
+(38, 1, 'asignar_menu', b'1', 1, '2025-07-31 00:05:13'),
+(39, 1, 'asignar_pagina', b'1', 1, '2025-07-31 00:05:13'),
+(40, 1, 'gestion_usuarios', b'1', 1, '2025-07-31 00:05:13'),
+(41, 1, 'permiso_menu', b'1', 1, '2025-07-31 00:05:13'),
+(42, 1, 'permiso_pagina', b'1', 1, '2025-07-31 00:05:13'),
+(43, 1, 'roles', b'1', 1, '2025-07-31 00:05:13'),
+(44, 1, 'usuarios', b'1', 1, '2025-07-31 00:05:13');
 
 -- --------------------------------------------------------
 
@@ -90,10 +123,14 @@ CREATE TABLE `roles_paginas` (
 --
 
 INSERT INTO `roles_paginas` (`idrol`, `pagina`, `activo`) VALUES
+(1, 'asignar_menu_usuario.php', b'1'),
 (1, 'asignar_permisos.php', b'1'),
 (1, 'permisos_por_rol.php', b'1'),
+(1, 'permisos_usuarios_menus.php', b'1'),
 (1, 'roles.php', b'1'),
-(1, 'usuarios.php', b'1');
+(1, 'usuarios.php', b'1'),
+(2, 'roles.php', b'1'),
+(2, 'usuarios.php', b'1');
 
 -- --------------------------------------------------------
 
@@ -127,6 +164,49 @@ INSERT INTO `usuarios` (`idusuario`, `nombrecompleto`, `usuario`, `contrasena`, 
 -- --------------------------------------------------------
 
 --
+-- Estructura de tabla para la tabla `usuarios_menus`
+--
+
+CREATE TABLE `usuarios_menus` (
+  `idusuario` int(11) NOT NULL,
+  `clave` varchar(255) NOT NULL,
+  `activo` bit(1) NOT NULL DEFAULT b'1'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Volcado de datos para la tabla `usuarios_menus`
+--
+
+INSERT INTO `usuarios_menus` (`idusuario`, `clave`, `activo`) VALUES
+(1, 'asignar_menu', b'1'),
+(1, 'asignar_pagina', b'1'),
+(1, 'gestion_usuarios', b'1'),
+(1, 'permiso_menu', b'1'),
+(1, 'permiso_pagina', b'1'),
+(1, 'roles', b'1'),
+(1, 'usuarios', b'1'),
+(2, 'gestion_usuarios', b'1'),
+(2, 'roles', b'1'),
+(2, 'usuarios', b'1');
+
+-- --------------------------------------------------------
+
+--
+-- Estructura Stand-in para la vista `vista_permisos_menus`
+-- (Véase abajo para la vista actual)
+--
+CREATE TABLE `vista_permisos_menus` (
+`idusuario` int(11)
+,`usuario` varchar(50)
+,`clave` varchar(255)
+,`activo` bit(1)
+,`usuarioregistra` int(11)
+,`fecharegistro` datetime
+);
+
+-- --------------------------------------------------------
+
+--
 -- Estructura Stand-in para la vista `vista_roles_permisos`
 -- (Véase abajo para la vista actual)
 --
@@ -138,6 +218,15 @@ CREATE TABLE `vista_roles_permisos` (
 ,`usuarioregistra` int(11)
 ,`fecharegistro` datetime
 );
+
+-- --------------------------------------------------------
+
+--
+-- Estructura para la vista `vista_permisos_menus`
+--
+DROP TABLE IF EXISTS `vista_permisos_menus`;
+
+CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `vista_permisos_menus`  AS SELECT `pm`.`idusuario` AS `idusuario`, `u`.`usuario` AS `usuario`, `pm`.`clave` AS `clave`, `pm`.`activo` AS `activo`, `pm`.`usuarioregistra` AS `usuarioregistra`, `pm`.`fecharegistro` AS `fecharegistro` FROM (`permisos_menus` `pm` join `usuarios` `u` on(`pm`.`idusuario` = `u`.`idusuario`)) WHERE `pm`.`activo` = 1 ;
 
 -- --------------------------------------------------------
 
@@ -158,6 +247,13 @@ CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW 
 ALTER TABLE `permisos`
   ADD PRIMARY KEY (`idpermiso`),
   ADD KEY `idrol` (`idrol`);
+
+--
+-- Indices de la tabla `permisos_menus`
+--
+ALTER TABLE `permisos_menus`
+  ADD PRIMARY KEY (`idpermisomenu`),
+  ADD KEY `idusuario` (`idusuario`);
 
 --
 -- Indices de la tabla `roles`
@@ -181,6 +277,12 @@ ALTER TABLE `usuarios`
   ADD KEY `FK_usuarios_roles` (`idrol`);
 
 --
+-- Indices de la tabla `usuarios_menus`
+--
+ALTER TABLE `usuarios_menus`
+  ADD PRIMARY KEY (`idusuario`,`clave`);
+
+--
 -- AUTO_INCREMENT de las tablas volcadas
 --
 
@@ -188,7 +290,13 @@ ALTER TABLE `usuarios`
 -- AUTO_INCREMENT de la tabla `permisos`
 --
 ALTER TABLE `permisos`
-  MODIFY `idpermiso` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=21;
+  MODIFY `idpermiso` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=56;
+
+--
+-- AUTO_INCREMENT de la tabla `permisos_menus`
+--
+ALTER TABLE `permisos_menus`
+  MODIFY `idpermisomenu` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=45;
 
 --
 -- AUTO_INCREMENT de la tabla `roles`
@@ -211,6 +319,12 @@ ALTER TABLE `usuarios`
 --
 ALTER TABLE `permisos`
   ADD CONSTRAINT `permisos_ibfk_1` FOREIGN KEY (`idrol`) REFERENCES `roles` (`idrol`);
+
+--
+-- Filtros para la tabla `permisos_menus`
+--
+ALTER TABLE `permisos_menus`
+  ADD CONSTRAINT `permisos_menus_ibfk_1` FOREIGN KEY (`idusuario`) REFERENCES `usuarios` (`idusuario`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
 -- Filtros para la tabla `roles_paginas`

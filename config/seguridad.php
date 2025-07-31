@@ -48,4 +48,21 @@ function verificarPermisoPagina() {
     }
 }
 
+function obtenerMenusUsuario($idusuario) {
+    $conn = getConnection();
+    $menus = [];
+
+    $sql = "SELECT usuario, clave FROM vista_permisos_menus WHERE idusuario = ? AND activo = b'1' ORDER BY usuario";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("i", $idusuario);
+    $stmt->execute();
+    $result = $stmt->get_result();
+
+    while ($row = $result->fetch_assoc()) {
+        $menus[] = $row;
+    }
+
+    return $menus;
+}
+
 ?>
