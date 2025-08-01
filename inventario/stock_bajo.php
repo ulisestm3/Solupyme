@@ -1,23 +1,18 @@
 <?php
 require_once('../config/database.php');
 require_once('../config/seguridad.php');
-//verificarPermisoPagina();
-
 $conn = getConnection();
-$alertas = $conn->query("
-    SELECT * FROM productos 
-    WHERE stock <= stock_minimo
-")->fetch_all(MYSQLI_ASSOC);
+$result = $conn->query("SELECT p.*, c.nombre AS categoria FROM productos p LEFT JOIN categorias c ON p.idcategoria = c.idcategoria WHERE p.stock <= p.stock_minimo AND p.activo = 1");
+$alertas = $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
 ?>
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Panel de Roles - AWFerreteria</title>
+    <title>Productos con Stock Bajo - AWFerreteria</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        /* Reset básico */
         * {
             box-sizing: border-box;
             margin: 0; padding: 0;
@@ -32,7 +27,6 @@ $alertas = $conn->query("
             display: flex;
             height: 100vh;
         }
-        /* Sidebar */
         .sidebar {
             width: 200px;
             background-color: #352b56ff;
@@ -74,7 +68,6 @@ $alertas = $conn->query("
         .sidebar .logout-btn:hover {
             background-color: #a3ad4cff;
         }
-        /* Main content */
         .main-content {
             flex: 1;
             padding: 1rem 1.5rem;
@@ -82,23 +75,36 @@ $alertas = $conn->query("
             overflow-y: auto;
             font-size: 14px;
         }
-        .main-content h1 {
+        .main-content h3 {
             color: #004080;
             margin-bottom: 1rem;
             font-size: 1.5rem;
+            display: flex;
+            align-items: center;
         }
-        a.btn {
-            display: inline-block;
+        .main-content h3 i {
+            margin-right: 10px;
+        }
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
             background-color: #004080;
             color: white;
-            padding: 6px 12px;
+            padding: 8px 15px;
             text-decoration: none;
             border-radius: 4px;
             font-size: 14px;
             margin-bottom: 15px;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.3s;
         }
-        a.btn:hover {
+        .btn:hover {
             background-color: #2563eb;
+        }
+        .btn i {
+            margin-right: 8px;
         }
         table {
             width: 100%;
@@ -107,8 +113,8 @@ $alertas = $conn->query("
             font-size: 13px;
         }
         th, td {
-            padding: 6px 8px;
-            border: 1px solid #ccc;
+            padding: 10px 12px;
+            border: 1px solid #ddd;
             text-align: left;
         }
         th {
@@ -116,21 +122,54 @@ $alertas = $conn->query("
             color: white;
             font-weight: 600;
         }
-        /* Acción editar */
-        .action-link {
-            display: inline-block;
-            margin-right: 8px;
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        tr:hover {
+            background-color: #f1f1f1;
+        }
+        .alert-info {
+            background-color: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+            border-radius: 4px;
+            padding: 15px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+        }
+        .alert-info i {
+            margin-right: 10px;
+            font-size: 20px;
+        }
+        .action-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 5px 8px;
+            border-radius: 4px;
+            margin-right: 5px;
+            text-decoration: none;
+            font-size: 13px;
+            transition: all 0.3s;
+            border: none;
             cursor: pointer;
-            vertical-align: middle;
+            background: none;
+            color: inherit;
         }
-        .action-link svg {
-            vertical-align: middle;
-            transition: transform 0.2s ease;
+        .action-btn i {
+            margin-right: 0;
+            font-size: 14px;
         }
-        .action-link:hover svg {
-            transform: scale(1.2);
+        .action-btn:hover {
+            transform: scale(1.1);
         }
-        /* Responsive */
+        .edit-btn {
+            color: #0d6efd;
+        }
+        .delete-btn {
+            color: #dc3545;
+        }
         @media (max-width: 768px) {
             .container {
                 flex-direction: column;
@@ -163,164 +202,68 @@ $alertas = $conn->query("
                 font-size: 0.8rem;
             }
             .main-content {
-                padding: 1rem 1rem;
+                padding: 1rem;
                 margin: 0;
                 font-size: 13px;
             }
-        }
-        /* Estilos para modales */
-        .modal {
-            display: none;
-            position: fixed;
-            z-index: 1;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            overflow: auto;
-            background-color: rgba(0, 0, 0, 0.5);
-        }
-        .modal-content {
-            background-color: #fefefe;
-            margin: 10% auto;
-            padding: 20px;
-            border: 1px solid #888;
-            width: 50%;
-            border-radius: 15px;
-        }
-        .close, .close-message {
-            color: #aaa;
-            float: right;
-            font-size: 28px;
-            font-weight: bold;
-        }
-        .close:hover, .close:focus, .close-message:hover, .close-message:focus {
-            color: black;
-            text-decoration: none;
-            cursor: pointer;
-        }
-        .modal-content label {
-            display: block;
-            margin-top: 10px;
-        }
-        .modal-content input[type="text"],
-        .modal-content textarea {
-            width: 100%;
-            padding: 8px;
-            margin-top: 5px;
-            border: 1px solid #ccc;
-            border-radius: 8px;
-            box-sizing: border-box;
-        }
-        .modal-content button {
-            background-color: #004080;
-            color: white;
-            padding: 10px 15px;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            margin-top: 10px;
-        }
-        .modal-content button:hover {
-            background-color: #2563eb;
-        }
-        /* Estilos para mensajes */
-        .mensaje-modal {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0,0,0,0.4);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 9999;
-        }
-        .mensaje-contenido {
-            background-color: white;
-            border-radius: 10px;
-            padding: 20px 30px;
-            max-width: 400px;
-            width: 90%;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-            text-align: center;
-            position: relative;
-            animation: fadeIn 0.3s ease-in-out;
-        }
-        .mensaje-contenido.success {
-            border-top: 6px solid #28a745;
-        }
-        .mensaje-contenido.error {
-            border-top: 6px solid #dc3545;
-        }
-        .mensaje-icono {
-            font-size: 40px;
-            margin-bottom: 10px;
-        }
-        .mensaje-texto {
-            font-size: 16px;
-            margin-bottom: 20px;
-            color: #333;
-        }
-        .mensaje-cerrar {
-            background-color: #007bff;
-            color: white;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-        .mensaje-cerrar:hover {
-            background-color: #0056b3;
-        }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: scale(0.9); }
-            to { opacity: 1; transform: scale(1); }
+            table {
+                font-size: 12px;
+            }
+            th, td {
+                padding: 8px 10px;
+            }
         }
     </style>
 </head>
 <body>
     <div class="container">
         <aside class="sidebar">
-            <h2>AWFerreteria</h2>
-            
+            <h2><i class="fas fa-store"></i> AWFerreteria</h2>
             <nav>
-                <a href="../admin/dashboard_admin.php">Dashboard</a>
-                <a href="../inventario/productos.php">Productos</a>
-                <a href="../inventario/categorias.php">Caterorías</a>
-                <a href="../inventario/movimientos.php">Movimientos</a>
-                <a href="../inventario/stock_bajo.php">Stock Bajo</a>
+                <a href="../admin/dashboard_admin.php"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+                <a href="../inventario/productos.php"><i class="fas fa-boxes"></i> Productos</a>
+                <a href="../inventario/categorias.php"><i class="fas fa-tags"></i> Categorías</a>
+                <a href="../inventario/movimientos.php"><i class="fas fa-exchange-alt"></i> Movimientos</a>
+                <a href="../inventario/stock_bajo.php"><i class="fas fa-exclamation-triangle"></i> Stock Bajo</a>
             </nav>
-            <a href="../auth/logout.php" class="logout-btn">Cerrar sesión</a>
+            <a href="../auth/logout.php" class="logout-btn"><i class="fas fa-sign-out-alt"></i> Cerrar sesión</a>
         </aside>
         <main class="main-content">
-
-<h3>Productos con Bajo Stock</h3>
-
-<?php if (empty($alertas)): ?>
-    <p>No hay alertas de stock bajo.</p>
-<?php else: ?>
-<table>
-    <thead>
-        <tr>
-            <th>Nombre</th>
-            <th>Stock Actual</th>
-            <th>Mínimo Requerido</th>
-        </tr>
-    </thead>
-    <tbody>
-    <?php foreach ($alertas as $a): ?>
-        <tr>
-            <td><?= htmlspecialchars($a['nombre']) ?></td>
-            <td><?= $a['stock'] ?></td>
-            <td><?= $a['stock_minimo'] ?></td>
-        </tr>
-    <?php endforeach; ?>
-    </tbody>
-</table>
-<?php endif; ?>
-
+            <h3><i class="fas fa-exclamation-triangle"></i> Productos con Stock Bajo</h3>
+            <?php if (empty($alertas)): ?>
+                <div class="alert-info">
+                    <i class="fas fa-info-circle"></i>
+                    <span>No hay alertas de stock bajo en este momento.</span>
+                </div>
+            <?php else: ?>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Nombre</th>
+                            <th>Categoría</th>
+                            <th>Stock Actual</th>
+                            <th>Stock Mínimo</th>
+                            <th>Faltante</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    <?php foreach ($alertas as $a):
+                        $faltante = $a['stock_minimo'] - $a['stock'];
+                    ?>
+                        <tr>
+                            <td><?= htmlspecialchars($a['nombre']) ?></td>
+                            <td><?= htmlspecialchars($a['categoria']) ?></td>
+                            <td><?= $a['stock'] ?></td>
+                            <td><?= $a['stock_minimo'] ?></td>
+                            <td style="color: <?= $faltante > 5 ? '#dc3545' : '#ffc107'; ?>; font-weight: bold;">
+                                <?= $faltante ?>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
+                    </tbody>
+                </table>
+            <?php endif; ?>
         </main>
-    </body>
+    </div>
+</body>
 </html>

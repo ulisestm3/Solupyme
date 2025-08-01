@@ -1,25 +1,116 @@
 <?php
 require_once('../config/database.php');
 require_once('../config/seguridad.php');
-//verificarPermisoPagina();
+// verificarPermisoPagina();
 
 $conn = getConnection();
-$movimientos = $conn->query("
-    SELECT m.*, p.nombre AS producto
-    FROM movimientos m
-    LEFT JOIN productos p ON m.idproducto = p.idproducto
-    ORDER BY m.fecha DESC
-")->fetch_all(MYSQLI_ASSOC);
+$movimientos = [];
+
+// Obtener lista de movimientos
+try {
+    $sql = "SELECT m.idmovimiento, p.nombre AS producto, m.tipo, m.cantidad, m.comentario, m.fecha, u.usuario 
+            FROM movimientos m
+            INNER JOIN productos p ON m.idproducto = p.idproducto
+            INNER JOIN usuarios u ON m.idusuario = u.idusuario
+            ORDER BY m.fecha DESC";
+
+    $stmt = $conn->query($sql);
+    $movimientos = $stmt->fetch_all(MYSQLI_ASSOC);
+} catch (Exception $e) {
+    echo "Error al cargar movimientos: " . $e->getMessage();
+}
+
+$mensaje = '';
+$tipoMensaje = '';
+
+// Lista de productos activos
+$productos = $conn->query("SELECT idproducto, nombre FROM productos WHERE activo = b'1'")
+                  ->fetch_all(MYSQLI_ASSOC);
+
+// --- Función separada para actualizar stock ---
+function actualizarStock(mysqli $conn, int $idproducto, string $tipo, int $cantidad): void {
+    if (strtolower($tipo) === 'entrada') {
+        $stmt = $conn->prepare("UPDATE productos SET stock = stock + ? WHERE idproducto = ?");
+    } else {
+        $stmt = $conn->prepare("UPDATE productos SET stock = stock - ? WHERE idproducto = ?");
+    }
+    $stmt->bind_param("ii", $cantidad, $idproducto);
+    $stmt->execute();
+    $stmt->close();
+}
+
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    $idproducto = intval($_POST["idproducto"]);
+    $tipo = $_POST["tipo"];
+    $cantidad = intval($_POST["cantidad"]);
+    $comentario = trim($_POST["comentario"]);
+    $idusuario = $_SESSION['idusuario'] ?? 1;
+
+    // Validación básica
+    if ($cantidad <= 0 || $comentario === '') {
+        $mensaje = "La cantidad debe ser mayor a cero y el comentario es obligatorio.";
+        $tipoMensaje = "error";
+    }
+
+    // Validación específica para salida
+    if ($mensaje === '' && strtolower($tipo) === 'salida') {
+        $stmt = $conn->prepare("SELECT stock FROM productos WHERE idproducto = ?");
+        $stmt->bind_param("i", $idproducto);
+        $stmt->execute();
+        $stmt->bind_result($stockActual);
+        if ($stmt->fetch()) {
+            if ($stockActual <= 0) {
+                $mensaje = "No hay stock disponible para este producto.";
+                $tipoMensaje = "error";
+            } elseif ($cantidad > $stockActual) {
+                $mensaje = "La cantidad de salida ($cantidad) excede el stock disponible ($stockActual).";
+                $tipoMensaje = "error";
+            }
+        } else {
+            $mensaje = "Producto no encontrado.";
+            $tipoMensaje = "error";
+        }
+        $stmt->close();
+    }
+
+    // Si pasa todas las validaciones
+    if ($mensaje === '') {
+        try {
+            $conn->begin_transaction();
+
+            // Insertar el movimiento
+            $insert = $conn->prepare("INSERT INTO movimientos (idproducto, tipo, cantidad, comentario, fecha, idusuario) VALUES (?, ?, ?, ?, NOW(), ?)");
+            $insert->bind_param("isisi", $idproducto, $tipo, $cantidad, $comentario, $idusuario);
+            $insert->execute();
+            $insert->close();
+
+            // ✅ Aquí se usa la función correctamente
+            actualizarStock($conn, $idproducto, $tipo, $cantidad);
+
+            $conn->commit();
+            $_SESSION['mensaje'] = "✅ Movimiento registrado correctamente.";
+            $_SESSION['tipoMensaje'] = "success";
+            header("Location: movimientos.php");
+            exit;
+        } catch (Exception $e) {
+            $conn->rollback();
+            $mensaje = "❌ Error al registrar el movimiento: " . $e->getMessage();
+            $tipoMensaje = "error";
+        }
+    }
+}
 ?>
+
+
 
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Panel de Roles - AWFerreteria</title>
+    <title>Movimientos de Inventario - AWFerreteria</title>
     <style>
-        /* Reset básico */
+        /* --- Sidebar --- */
         * {
             box-sizing: border-box;
             margin: 0; padding: 0;
@@ -34,7 +125,6 @@ $movimientos = $conn->query("
             display: flex;
             height: 100vh;
         }
-        /* Sidebar */
         .sidebar {
             width: 200px;
             background-color: #352b56ff;
@@ -76,7 +166,7 @@ $movimientos = $conn->query("
         .sidebar .logout-btn:hover {
             background-color: #a3ad4cff;
         }
-        /* Main content */
+        /* --- Main content --- */
         .main-content {
             flex: 1;
             padding: 1rem 1.5rem;
@@ -84,7 +174,7 @@ $movimientos = $conn->query("
             overflow-y: auto;
             font-size: 14px;
         }
-        .main-content h1 {
+        .main-content h3 {
             color: #004080;
             margin-bottom: 1rem;
             font-size: 1.5rem;
@@ -118,115 +208,7 @@ $movimientos = $conn->query("
             color: white;
             font-weight: 600;
         }
-        /* Acción editar */
-        .action-link {
-            display: inline-block;
-            margin-right: 8px;
-            cursor: pointer;
-            vertical-align: middle;
-        }
-        .action-link svg {
-            vertical-align: middle;
-            transition: transform 0.2s ease;
-        }
-        .action-link:hover svg {
-            transform: scale(1.2);
-        }
-        /* Responsive */
-        @media (max-width: 768px) {
-            .container {
-                flex-direction: column;
-            }
-            .sidebar {
-                width: 100%;
-                flex-direction: row;
-                overflow-x: auto;
-                padding: 0.5rem;
-            }
-            .sidebar h2 {
-                flex: 1 0 auto;
-                margin-bottom: 0;
-                padding-right: 1rem;
-                text-align: left;
-                font-size: 1rem;
-            }
-            .sidebar nav {
-                display: flex;
-                gap: 1rem;
-            }
-            .sidebar nav a {
-                margin-bottom: 0;
-                padding: 0.5rem 0.8rem;
-                font-size: 0.8rem;
-            }
-            .sidebar .logout-btn {
-                margin-top: 0;
-                padding: 0.5rem 0.8rem;
-                font-size: 0.8rem;
-            }
-            .main-content {
-                padding: 1rem 1rem;
-                margin: 0;
-                font-size: 13px;
-            }
-        }
-        /* Estilos para modales */
-        .modal {
-            display: none;
-            position: fixed;
-            z-index: 1;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            overflow: auto;
-            background-color: rgba(0, 0, 0, 0.5);
-        }
-        .modal-content {
-            background-color: #fefefe;
-            margin: 10% auto;
-            padding: 20px;
-            border: 1px solid #888;
-            width: 50%;
-            border-radius: 15px;
-        }
-        .close, .close-message {
-            color: #aaa;
-            float: right;
-            font-size: 28px;
-            font-weight: bold;
-        }
-        .close:hover, .close:focus, .close-message:hover, .close-message:focus {
-            color: black;
-            text-decoration: none;
-            cursor: pointer;
-        }
-        .modal-content label {
-            display: block;
-            margin-top: 10px;
-        }
-        .modal-content input[type="text"],
-        .modal-content textarea {
-            width: 100%;
-            padding: 8px;
-            margin-top: 5px;
-            border: 1px solid #ccc;
-            border-radius: 8px;
-            box-sizing: border-box;
-        }
-        .modal-content button {
-            background-color: #004080;
-            color: white;
-            padding: 10px 15px;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            margin-top: 10px;
-        }
-        .modal-content button:hover {
-            background-color: #2563eb;
-        }
-        /* Estilos para mensajes */
+        /* Modal mensajes */
         .mensaje-modal {
             position: fixed;
             top: 0;
@@ -255,6 +237,9 @@ $movimientos = $conn->query("
         }
         .mensaje-contenido.error {
             border-top: 6px solid #dc3545;
+        }
+        .mensaje-contenido.warning {
+            border-top: 6px solid #ffc107;
         }
         .mensaje-icono {
             font-size: 40px;
@@ -286,47 +271,175 @@ $movimientos = $conn->query("
     <div class="container">
         <aside class="sidebar">
             <h2>AWFerreteria</h2>
-            
             <nav>
                 <a href="../admin/dashboard_admin.php">Dashboard</a>
                 <a href="../inventario/productos.php">Productos</a>
-                <a href="../inventario/categorias.php">Caterorías</a>
+                <a href="../inventario/categorias.php">Categorías</a>
                 <a href="../inventario/movimientos.php">Movimientos</a>
                 <a href="../inventario/stock_bajo.php">Stock Bajo</a>
             </nav>
             <a href="../auth/logout.php" class="logout-btn">Cerrar sesión</a>
         </aside>
         <main class="main-content">
+            <h3>Movimientos de Inventario (Kardex)</h3> <br>
 
-<h3>Movimientos de Inventario (Kardex)</h3> <br>
+            <form method="POST" style="margin-bottom: 20px;">
+                <label for="idproducto">Producto:</label><br>
+                <select name="idproducto" id="idproducto" required style="width: 100%; padding: 6px; margin-bottom: 10px;">
+                    <option value="">Seleccione un producto</option>
+                    <?php foreach ($productos as $p): ?>
+                        <option value="<?= $p['idproducto'] ?>"><?= htmlspecialchars($p['nombre']) ?></option>
+                    <?php endforeach; ?>
+                </select>
 
-<a href="nuevo_movimiento.php" class="btn">Registrar Movimiento</a>
+                <label for="tipo">Tipo:</label><br>
+                <select name="tipo" id="tipo" required style="width: 100%; padding: 6px; margin-bottom: 10px;">
+                    <option value="entrada">Entrada</option>
+                    <option value="salida">Salida</option>
+                </select>
 
-<table>
-    <thead>
-        <tr>
-            <th>Producto</th>
-            <th>Tipo</th>
-            <th>Cantidad</th>
-            <th>Fecha</th>
-            <th>Comentario</th>
-        </tr>
-    </thead>
-    <tbody>
-    <?php foreach ($movimientos as $m): ?>
-        <tr>
-            <td><?= htmlspecialchars($m['producto']) ?></td>
-            <td><?= $m['tipo'] ?></td>
-            <td><?= $m['cantidad'] ?></td>
-            <td><?= $m['fecha'] ?></td>
-            <td><?= htmlspecialchars($m['comentario']) ?></td>
-        </tr>
-    <?php endforeach; ?>
-    </tbody>
-</table>
+                <div id="stockDisponibleContainer" style="display:none; margin-top: 5px;">
+                    <strong>Stock disponible:</strong> <span id="stockDisponibleTexto">0</span>
+                </div>
 
+                <label for="cantidad">Cantidad:</label><br>
+                <input type="number" name="cantidad" id="cantidad" min="1" required style="width: 100%; padding: 6px; margin-bottom: 10px;">
 
+                <label for="comentario">Comentario:</label><br>
+                <input type="text" name="comentario" required style="width: 100%; padding: 6px; margin-bottom: 10px;">
 
+                <button type="submit" class="btn">Guardar Movimiento</button>
+            </form>
+
+            <?php if ($mensaje): ?>
+            <div class="mensaje-modal" id="modalMensaje">
+                <div class="mensaje-contenido <?= $tipoMensaje ?>">
+                    <div class="mensaje-icono"><?= $tipoMensaje === 'success' ? '✅' : '❌' ?></div>
+                    <div class="mensaje-texto"><?= $mensaje ?></div>
+                    <button class="mensaje-cerrar" onclick="document.getElementById('modalMensaje').style.display='none'">Cerrar</button>
+                </div>
+            </div>
+            <script>
+                setTimeout(() => {
+                    const modal = document.getElementById('modalMensaje');
+                    if(modal) modal.style.display = 'none';
+                }, 4000);
+            </script>
+            <?php endif; ?>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Producto</th>
+                        <th>Tipo</th>
+                        <th>Cantidad</th>
+                        <th>Comentario</th>
+                        <th>Fecha</th>
+                        <th>Usuario</th>
+                    </tr>
+                </thead>
+                <tbody>
+                <?php if (!empty($movimientos)) : ?>
+                    <?php foreach ($movimientos as $mov) : ?>
+                    <tr>
+                        <td><?= $mov['idmovimiento'] ?></td>
+                        <td><?= htmlspecialchars($mov['producto']) ?></td>
+                        <td><?= ucfirst($mov['tipo']) ?></td>
+                        <td><?= $mov['cantidad'] ?></td>
+                        <td><?= htmlspecialchars($mov['comentario']) ?></td>
+                        <td><?= $mov['fecha'] ?></td>
+                        <td><?= $mov['usuario'] ?></td>
+                    </tr>
+                    <?php endforeach; ?>
+                <?php else : ?>
+                    <tr><td colspan="7">No hay movimientos registrados.</td></tr>
+                <?php endif; ?>
+                </tbody>
+            </table>
         </main>
-    </body>
+    </div>
+
+    <!-- Modal Advertencia cantidad -->
+    <div class="mensaje-modal" id="modalAdvertenciaCantidad" style="display:none;">
+        <div class="mensaje-contenido warning">
+            <div class="mensaje-icono">⚠️</div>
+            <div class="mensaje-texto" id="textoAdvertenciaCantidad">No puedes ingresar una cantidad mayor que el stock disponible.</div>
+            <button class="mensaje-cerrar" onclick="cerrarModalAdvertencia()">Cerrar</button>
+        </div>
+    </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const tipoSelect = document.getElementById('tipo');
+    const productoSelect = document.getElementById('idproducto');
+    const stockContainer = document.getElementById('stockDisponibleContainer');
+    const stockTexto = document.getElementById('stockDisponibleTexto');
+    const cantidadInput = document.getElementById('cantidad');
+    const modalAdvertencia = document.getElementById('modalAdvertenciaCantidad');
+    const textoAdvertencia = document.getElementById('textoAdvertenciaCantidad');
+    let stockActual = 0;
+    let timeoutModal;
+
+    function mostrarModalAdvertencia(mensaje) {
+        textoAdvertencia.textContent = mensaje;
+        modalAdvertencia.style.display = 'flex';
+        if(timeoutModal) clearTimeout(timeoutModal);
+        timeoutModal = setTimeout(() => {
+            modalAdvertencia.style.display = 'none';
+        }, 20000);
+    }
+
+    window.cerrarModalAdvertencia = function () {
+        modalAdvertencia.style.display = 'none';
+        if(timeoutModal) clearTimeout(timeoutModal);
+    }
+
+    function actualizarStockVisible() {
+        const tipo = tipoSelect.value.toLowerCase();
+        const idProducto = productoSelect.value;
+
+        if (tipo === 'salida' && idProducto) {
+            fetch(`../inventario/obtener_stock.php?idproducto=${idProducto}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        stockActual = parseInt(data.stock, 10);
+                        stockTexto.textContent = stockActual;
+                        stockContainer.style.display = 'block';
+                        cantidadInput.max = stockActual;
+                        if (parseInt(cantidadInput.value, 10) > stockActual) {
+                            cantidadInput.value = stockActual;
+                            mostrarModalAdvertencia(`La cantidad máxima disponible para salida es ${stockActual}. Se ha ajustado el valor.`);
+                        }
+                    } else {
+                        stockActual = 0;
+                        stockTexto.textContent = '0';
+                        stockContainer.style.display = 'block';
+                        cantidadInput.max = 0;
+                        cantidadInput.value = 0;
+                    }
+                });
+        } else {
+            stockActual = 0;
+            stockContainer.style.display = 'none';
+            cantidadInput.removeAttribute('max');
+        }
+    }
+
+    tipoSelect.addEventListener('change', actualizarStockVisible);
+    productoSelect.addEventListener('change', actualizarStockVisible);
+
+    cantidadInput.addEventListener('input', () => {
+        if (tipoSelect.value.toLowerCase() === 'salida') {
+            const val = parseInt(cantidadInput.value, 10);
+            if (val > stockActual) {
+                cantidadInput.value = stockActual;
+                mostrarModalAdvertencia(`No puedes ingresar una cantidad mayor que el stock disponible *** ${stockActual} ***.`);
+            }
+        }
+    });
+});
+</script>
+</body>
 </html>
