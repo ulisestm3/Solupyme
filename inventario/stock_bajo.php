@@ -255,7 +255,7 @@ $alertas = $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
                             <td><?= htmlspecialchars($a['categoria']) ?></td>
                             <td><?= $a['stock'] ?></td>
                             <td><?= $a['stock_minimo'] ?></td>
-                            <td style="color: <?= $faltante > 5 ? '#dc3545' : '#ffc107'; ?>; font-weight: bold;">
+                            <td style="color: <?= $faltante > $a['stock_minimo'] ? '#dc3545' : '#040404ff'; ?>; font-weight: bold;">
                                 <?= $faltante ?>
                             </td>
                         </tr>

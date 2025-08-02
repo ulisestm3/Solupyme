@@ -1,43 +1,54 @@
 <?php
 require_once('../config/database.php');
 require_once('../config/seguridad.php');
-// verificarPermisoPagina();
-
 $conn = getConnection();
 $movimientos = [];
+$totalRegistros = 0;
 
-// Obtener lista de movimientos
+// Paginación
+$pagina = isset($_GET['pagina']) ? (int)$_GET['pagina'] : 1;
+$porPagina = isset($_GET['por_pagina']) ? (int)$_GET['por_pagina'] : 10;
+if (!in_array($porPagina, [10, 50, 100])) $porPagina = 10;
+$offset = ($pagina - 1) * $porPagina;
+
+// Contar total
 try {
-    $sql = "SELECT m.idmovimiento, p.nombre AS producto, m.tipo, m.cantidad, m.comentario, m.fecha, u.usuario 
+    $sqlCount = "SELECT COUNT(*) as total FROM movimientos m
+                 INNER JOIN productos p ON m.idproducto = p.idproducto
+                 INNER JOIN usuarios u ON m.idusuario = u.idusuario";
+    $stmtCount = $conn->query($sqlCount);
+    $totalRegistros = $stmtCount->fetch_assoc()['total'];
+    $totalPaginas = ceil($totalRegistros / $porPagina);
+} catch (Exception $e) {
+    $totalRegistros = 0;
+    $totalPaginas = 1;
+}
+
+// Obtener movimientos con paginación
+try {
+    $sql = "SELECT m.idmovimiento, p.nombre AS producto, m.tipo, m.cantidad, m.comentario, m.fecha, u.usuario
             FROM movimientos m
             INNER JOIN productos p ON m.idproducto = p.idproducto
             INNER JOIN usuarios u ON m.idusuario = u.idusuario
-            ORDER BY m.fecha DESC";
-
-    $stmt = $conn->query($sql);
-    $movimientos = $stmt->fetch_all(MYSQLI_ASSOC);
+            ORDER BY m.fecha DESC
+            LIMIT ? OFFSET ?";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("ii", $porPagina, $offset);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $movimientos = $result->fetch_all(MYSQLI_ASSOC);
 } catch (Exception $e) {
     echo "Error al cargar movimientos: " . $e->getMessage();
 }
 
 $mensaje = '';
 $tipoMensaje = '';
+$mensaje = $_SESSION['mensaje'] ?? '';
+$tipoMensaje = $_SESSION['tipoMensaje'] ?? '';
+unset($_SESSION['mensaje'], $_SESSION['tipoMensaje']);
 
-// Lista de productos activos
 $productos = $conn->query("SELECT idproducto, nombre FROM productos WHERE activo = b'1'")
                   ->fetch_all(MYSQLI_ASSOC);
-
-// --- Función separada para actualizar stock ---
-function actualizarStock(mysqli $conn, int $idproducto, string $tipo, int $cantidad): void {
-    if (strtolower($tipo) === 'entrada') {
-        $stmt = $conn->prepare("UPDATE productos SET stock = stock + ? WHERE idproducto = ?");
-    } else {
-        $stmt = $conn->prepare("UPDATE productos SET stock = stock - ? WHERE idproducto = ?");
-    }
-    $stmt->bind_param("ii", $cantidad, $idproducto);
-    $stmt->execute();
-    $stmt->close();
-}
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $idproducto = intval($_POST["idproducto"]);
@@ -46,13 +57,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $comentario = trim($_POST["comentario"]);
     $idusuario = $_SESSION['idusuario'] ?? 1;
 
-    // Validación básica
     if ($cantidad <= 0 || $comentario === '') {
         $mensaje = "La cantidad debe ser mayor a cero y el comentario es obligatorio.";
         $tipoMensaje = "error";
     }
 
-    // Validación específica para salida
     if ($mensaje === '' && strtolower($tipo) === 'salida') {
         $stmt = $conn->prepare("SELECT stock FROM productos WHERE idproducto = ?");
         $stmt->bind_param("i", $idproducto);
@@ -73,47 +82,39 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $stmt->close();
     }
 
-    // Si pasa todas las validaciones
     if ($mensaje === '') {
         try {
             $conn->begin_transaction();
-
-            // Insertar el movimiento
             $insert = $conn->prepare("INSERT INTO movimientos (idproducto, tipo, cantidad, comentario, fecha, idusuario) VALUES (?, ?, ?, ?, NOW(), ?)");
             $insert->bind_param("isisi", $idproducto, $tipo, $cantidad, $comentario, $idusuario);
             $insert->execute();
             $insert->close();
-
-            // ✅ Aquí se usa la función correctamente
-            actualizarStock($conn, $idproducto, $tipo, $cantidad);
-
             $conn->commit();
-            $_SESSION['mensaje'] = "✅ Movimiento registrado correctamente.";
+            $_SESSION['mensaje'] = "Movimiento registrado correctamente.";
             $_SESSION['tipoMensaje'] = "success";
-            header("Location: movimientos.php");
+            header('Location: movimientos.php');
             exit;
         } catch (Exception $e) {
             $conn->rollback();
-            $mensaje = "❌ Error al registrar el movimiento: " . $e->getMessage();
+            $mensaje = "Error al registrar el movimiento: " . $e->getMessage();
             $tipoMensaje = "error";
         }
     }
 }
 ?>
-
-
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Movimientos de Inventario - AWFerreteria</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        /* --- Sidebar --- */
+        /* Estilos existentes sin cambios */
         * {
             box-sizing: border-box;
-            margin: 0; padding: 0;
+            margin: 0;
+            padding: 0;
         }
         body, html {
             height: 100%;
@@ -166,7 +167,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         .sidebar .logout-btn:hover {
             background-color: #a3ad4cff;
         }
-        /* --- Main content --- */
         .main-content {
             flex: 1;
             padding: 1rem 1.5rem;
@@ -178,19 +178,32 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             color: #004080;
             margin-bottom: 1rem;
             font-size: 1.5rem;
+            display: flex;
+            align-items: center;
         }
-        a.btn {
-            display: inline-block;
+        .main-content h3 i {
+            margin-right: 10px;
+        }
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
             background-color: #004080;
             color: white;
-            padding: 6px 12px;
+            padding: 8px 15px;
             text-decoration: none;
             border-radius: 4px;
             font-size: 14px;
             margin-bottom: 15px;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.3s;
         }
-        a.btn:hover {
+        .btn:hover {
             background-color: #2563eb;
+        }
+        .btn i {
+            margin-right: 8px;
         }
         table {
             width: 100%;
@@ -199,8 +212,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             font-size: 13px;
         }
         th, td {
-            padding: 6px 8px;
-            border: 1px solid #ccc;
+            padding: 10px 12px;
+            border: 1px solid #ddd;
             text-align: left;
         }
         th {
@@ -208,129 +221,446 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             color: white;
             font-weight: 600;
         }
-        /* Modal mensajes */
-        .mensaje-modal {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0,0,0,0.4);
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        tr:hover {
+            background-color: #f1f1f1;
+        }
+        .error-message {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+            border-radius: 4px;
+            padding: 10px 15px;
+            margin-bottom: 15px;
             display: flex;
-            justify-content: center;
             align-items: center;
-            z-index: 9999;
         }
-        .mensaje-contenido {
-            background-color: white;
-            border-radius: 10px;
-            padding: 20px 30px;
-            max-width: 400px;
-            width: 90%;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-            text-align: center;
+        .error-message i {
+            margin-right: 10px;
+            color: #721c24;
+        }
+        /* Estilos para el textarea de comentario */
+        .comentario-container {
             position: relative;
-            animation: fadeIn 0.3s ease-in-out;
+            margin-bottom: 15px;
         }
-        .mensaje-contenido.success {
-            border-top: 6px solid #28a745;
+        #comentario {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+            resize: vertical;
+            min-height: 80px;
+            max-height: 150px;
+            font-family: inherit;
+            margin-bottom: 5px;
         }
-        .mensaje-contenido.error {
-            border-top: 6px solid #dc3545;
+        #contador-caracteres {
+            text-align: right;
+            font-size: 12px;
+            color: #666;
+            margin-top: -10px;
+            margin-bottom: 15px;
         }
-        .mensaje-contenido.warning {
-            border-top: 6px solid #ffc107;
-        }
-        .mensaje-icono {
-            font-size: 40px;
-            margin-bottom: 10px;
-        }
-        .mensaje-texto {
-            font-size: 16px;
-            margin-bottom: 20px;
-            color: #333;
-        }
-        .mensaje-cerrar {
-            background-color: #007bff;
-            color: white;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 5px;
+        /* Tooltip para comentarios largos */
+        .comentario-tooltip {
+            position: relative;
+            display: inline-block;
+            max-width: 200px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
             cursor: pointer;
         }
-        .mensaje-cerrar:hover {
+        .comentario-tooltip:hover::after {
+            content: attr(data-comentario-completo);
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            bottom: 100%;
+            background-color: #333;
+            color: white;
+            padding: 10px;
+            border-radius: 4px;
+            width: 300px;
+            white-space: normal;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            z-index: 100;
+            font-size: 13px;
+        }
+        /* ESTILOS MODALES ARRASTRABLES */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.4);
+            overflow: auto;
+            animation: fadeIn 0.3s;
+        }
+        .modal-content {
+            background-color: #ffffff;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            padding: 20px 25px;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 600px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            border: none;
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #eee;
+            cursor: move;
+        }
+        .modal-header h3 {
+            color: #333;
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+        }
+        .modal-header h3 i {
+            margin-right: 10px;
+        }
+        .close {
+            color: #aaa;
+            font-size: 24px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: color 0.3s;
+        }
+        .close:hover {
+            color: #333;
+        }
+        .modal-body {
+            margin-bottom: 20px;
+        }
+        .modal-body label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #444;
+        }
+        .modal-body input[type="text"],
+        .modal-body input[type="number"],
+        .modal-body select {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 15px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+        .modal-body input:focus,
+        .modal-body select:focus {
+            border-color: #007bff;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25);
+        }
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+        .modal-footer button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: none;
+        }
+        .modal-footer button i {
+            margin-right: 8px;
+        }
+        .btn-primary {
+            background-color: #007bff;
+            color: white;
+        }
+        .btn-primary:hover {
             background-color: #0056b3;
         }
+        .btn-secondary {
+            background-color: #f8f9fa;
+            color: #333;
+            border: 1px solid #ddd;
+        }
+        .btn-secondary:hover {
+            background-color: #e2e6ea;
+        }
+        .btn-danger {
+            background-color: #dc3545;
+            color: white;
+        }
+        .btn-danger:hover {
+            background-color: #c82333;
+        }
+        .success-modal {
+            display: none;
+            position: fixed;
+            z-index: 1001;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.4);
+            animation: fadeIn 0.3s;
+        }
+        .success-modal-content {
+            background-color: white;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            padding: 30px;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 400px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        .success-modal-content i.fas.fa-check-circle {
+            color: #28a745;
+            font-size: 50px;
+            margin-bottom: 15px;
+        }
+        .success-modal-content h3 {
+            color: #28a745;
+            margin-bottom: 15px;
+            font-size: 1.5rem;
+            text-align: center;
+            font-weight: bold;
+        }
+        .success-modal-content p {
+            color: #666;
+            margin-bottom: 25px;
+            font-size: 14px;
+            text-align: center;
+        }
+        .success-modal-content button {
+            display: block;
+            width: 100%;
+            max-width: 150px;
+            margin: 0 auto;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: background-color 0.3s;
+        }
+        .success-modal-content button:hover {
+            background-color: #218838;
+        }
+        .warning-modal {
+            display: none;
+            position: fixed;
+            z-index: 1001;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.4);
+            animation: fadeIn 0.3s;
+        }
+        .warning-modal-content {
+            background-color: white;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            padding: 30px;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 400px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        .warning-modal-content i.fas.fa-exclamation-triangle {
+            color: #ffa52fff;
+            font-size: 50px;
+            margin-bottom: 15px;
+        }
+        .warning-modal-content h3 {
+            color: #ffa52fff;
+            margin-bottom: 15px;
+            font-size: 1.5rem;
+            text-align: center;
+            font-weight: bold;
+        }
+        .warning-modal-content p {
+            color: #666;
+            margin-bottom: 25px;
+            font-size: 14px;
+            text-align: center;
+        }
+        .warning-modal-content button {
+            display: block;
+            width: 100%;
+            max-width: 150px;
+            margin: 0 auto;
+            background-color: #ffc107;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: background-color 0.3s;
+        }
+        .warning-modal-content button:hover {
+            background-color: #e0a800;
+        }
         @keyframes fadeIn {
-            from { opacity: 0; transform: scale(0.9); }
-            to { opacity: 1; transform: scale(1); }
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+            }
+            .sidebar {
+                width: 100%;
+                flex-direction: row;
+                overflow-x: auto;
+                padding: 0.5rem;
+            }
+            .sidebar h2 {
+                flex: 1 0 auto;
+                margin-bottom: 0;
+                padding-right: 1rem;
+                text-align: left;
+                font-size: 1rem;
+            }
+            .sidebar nav {
+                display: flex;
+                gap: 1rem;
+            }
+            .sidebar nav a {
+                margin-bottom: 0;
+                padding: 0.5rem 0.8rem;
+                font-size: 0.8rem;
+            }
+            .sidebar .logout-btn {
+                margin-top: 0;
+                padding: 0.5rem 0.8rem;
+                font-size: 0.8rem;
+            }
+            .main-content {
+                padding: 1rem;
+                margin: 0;
+                font-size: 13px;
+            }
+            .modal-content {
+                width: 95%;
+            }
+            .success-modal-content {
+                width: 95%;
+            }
+            table {
+                font-size: 12px;
+            }
+            th, td {
+                padding: 8px 10px;
+            }
+        }
+        /* Paginación */
+        .pagination-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 15px;
+            font-size: 13px;
+            color: #555;
+        }
+        .pagination {
+            display: flex;
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            gap: 5px;
+        }
+        .pagination a, .pagination span {
+            padding: 5px 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            text-decoration: none;
+            color: #007bff;
+            font-size: 13px;
+        }
+        .pagination a:hover {
+            background-color: #007bff;
+            color: white;
+        }
+        .pagination .current {
+            background-color: #007bff;
+            color: white;
+            font-weight: bold;
+        }
+        .pagination .disabled {
+            color: #ccc;
+            cursor: not-allowed;
+        }
+        .per-page-select {
+            padding: 5px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 13px;
         }
     </style>
 </head>
 <body>
     <div class="container">
         <aside class="sidebar">
-            <h2>AWFerreteria</h2>
+            <h2><i class="fas fa-store"></i> AWFerreteria</h2>
             <nav>
-                <a href="../admin/dashboard_admin.php">Dashboard</a>
-                <a href="../inventario/productos.php">Productos</a>
-                <a href="../inventario/categorias.php">Categorías</a>
-                <a href="../inventario/movimientos.php">Movimientos</a>
-                <a href="../inventario/stock_bajo.php">Stock Bajo</a>
+                <a href="../admin/dashboard_admin.php"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+                <a href="../inventario/productos.php"><i class="fas fa-boxes"></i> Productos</a>
+                <a href="../inventario/categorias.php"><i class="fas fa-tags"></i> Categorías</a>
+                <a href="../inventario/movimientos.php"><i class="fas fa-exchange-alt"></i> Movimientos</a>
+                <a href="../inventario/stock_bajo.php"><i class="fas fa-exclamation-triangle"></i> Stock Bajo</a>
             </nav>
-            <a href="../auth/logout.php" class="logout-btn">Cerrar sesión</a>
+            <a href="../auth/logout.php" class="logout-btn"><i class="fas fa-sign-out-alt"></i> Cerrar sesión</a>
         </aside>
         <main class="main-content">
-            <h3>Movimientos de Inventario (Kardex)</h3> <br>
+            <h3><i class="fas fa-exchange-alt"></i> Movimientos de Inventario (Kardex)</h3>
+            <button class="btn" id="openModal"><i class="fas fa-plus"></i> Agregar Registro</button>
 
-            <form method="POST" style="margin-bottom: 20px;">
-                <label for="idproducto">Producto:</label><br>
-                <select name="idproducto" id="idproducto" required style="width: 100%; padding: 6px; margin-bottom: 10px;">
-                    <option value="">Seleccione un producto</option>
-                    <?php foreach ($productos as $p): ?>
-                        <option value="<?= $p['idproducto'] ?>"><?= htmlspecialchars($p['nombre']) ?></option>
-                    <?php endforeach; ?>
-                </select>
-
-                <label for="tipo">Tipo:</label><br>
-                <select name="tipo" id="tipo" required style="width: 100%; padding: 6px; margin-bottom: 10px;">
-                    <option value="entrada">Entrada</option>
-                    <option value="salida">Salida</option>
-                </select>
-
-                <div id="stockDisponibleContainer" style="display:none; margin-top: 5px;">
-                    <strong>Stock disponible:</strong> <span id="stockDisponibleTexto">0</span>
-                </div>
-
-                <label for="cantidad">Cantidad:</label><br>
-                <input type="number" name="cantidad" id="cantidad" min="1" required style="width: 100%; padding: 6px; margin-bottom: 10px;">
-
-                <label for="comentario">Comentario:</label><br>
-                <input type="text" name="comentario" required style="width: 100%; padding: 6px; margin-bottom: 10px;">
-
-                <button type="submit" class="btn">Guardar Movimiento</button>
-            </form>
-
-            <?php if ($mensaje): ?>
-            <div class="mensaje-modal" id="modalMensaje">
-                <div class="mensaje-contenido <?= $tipoMensaje ?>">
-                    <div class="mensaje-icono"><?= $tipoMensaje === 'success' ? '✅' : '❌' ?></div>
-                    <div class="mensaje-texto"><?= $mensaje ?></div>
-                    <button class="mensaje-cerrar" onclick="document.getElementById('modalMensaje').style.display='none'">Cerrar</button>
-                </div>
-            </div>
-            <script>
-                setTimeout(() => {
-                    const modal = document.getElementById('modalMensaje');
-                    if(modal) modal.style.display = 'none';
-                }, 4000);
-            </script>
-            <?php endif; ?>
-
+            <!-- Tabla -->
             <table>
                 <thead>
                     <tr>
-                        <th>ID</th>
+                        <th hidden="true">ID</th>
                         <th>Producto</th>
                         <th>Tipo</th>
                         <th>Cantidad</th>
@@ -343,12 +673,17 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 <?php if (!empty($movimientos)) : ?>
                     <?php foreach ($movimientos as $mov) : ?>
                     <tr>
-                        <td><?= $mov['idmovimiento'] ?></td>
+                        <td hidden="true"><?= $mov['idmovimiento'] ?></td>
                         <td><?= htmlspecialchars($mov['producto']) ?></td>
                         <td><?= ucfirst($mov['tipo']) ?></td>
                         <td><?= $mov['cantidad'] ?></td>
-                        <td><?= htmlspecialchars($mov['comentario']) ?></td>
-                        <td><?= $mov['fecha'] ?></td>
+                        <td>
+                            <button type="button" class="btn" style="padding: 5px 10px; font-size: 12px;"
+                                    onclick="verComentario('<?= addslashes(htmlspecialchars($mov['comentario'])) ?>')">
+                                <i class="fas fa-eye"></i> Ver
+                            </button>
+                        </td>
+                        <td><?= date('d/m/Y', strtotime($mov['fecha'])) ?></td>
                         <td><?= $mov['usuario'] ?></td>
                     </tr>
                     <?php endforeach; ?>
@@ -357,89 +692,271 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 <?php endif; ?>
                 </tbody>
             </table>
+
+            <!-- Paginación -->
+            <?php if ($totalRegistros > 0): ?>
+            <div class="pagination-container">
+                <div>
+                    Mostrando <strong><?= min($offset + 1, $totalRegistros) ?> - <?= min($offset + $porPagina, $totalRegistros) ?></strong>
+                    de <strong><?= $totalRegistros ?></strong> registros
+                </div>
+                <div>
+                    <label for="por_pagina">Mostrar: </label>
+                    <select id="por_pagina" class="per-page-select" onchange="cambiarPorPagina(this.value)">
+                        <option value="10" <?= $porPagina == 10 ? 'selected' : '' ?>>10</option>
+                        <option value="50" <?= $porPagina == 50 ? 'selected' : '' ?>>50</option>
+                        <option value="100" <?= $porPagina == 100 ? 'selected' : '' ?>>100</option>
+                    </select>
+                </div>
+            </div>
+
+            <ul class="pagination">
+                <li><a href="?pagina=<?= max(1, $pagina - 1) ?>&por_pagina=<?= $porPagina ?>" class="<?= $pagina <= 1 ? 'disabled' : '' ?>">Anterior</a></li>
+                <?php for ($i = 1; $i <= $totalPaginas; $i++): ?>
+                    <li><a href="?pagina=<?= $i ?>&por_pagina=<?= $porPagina ?>" class="<?= $i == $pagina ? 'current' : '' ?>"><?= $i ?></a></li>
+                <?php endfor; ?>
+                <li><a href="?pagina=<?= min($totalPaginas, $pagina + 1) ?>&por_pagina=<?= $porPagina ?>" class="<?= $pagina >= $totalPaginas ? 'disabled' : '' ?>">Siguiente</a></li>
+            </ul>
+            <?php endif; ?>
+
+            <!-- Modal para ver comentario -->
+            <div id="comentarioModal" class="modal">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3><i class="fas fa-comment"></i> Comentario</h3>
+                        <span class="close" onclick="cerrarComentarioModal()">&times;</span>
+                    </div>
+                    <div class="modal-body">
+                        <textarea id="textoComentario" rows="4" readonly style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; background-color: #f8f9fa; font-size: 14px; resize: none;"></textarea>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn-secondary" onclick="cerrarComentarioModal()">Cerrar</button>
+                    </div>
+                </div>
+            </div>
         </main>
     </div>
 
-    <!-- Modal Advertencia cantidad -->
-    <div class="mensaje-modal" id="modalAdvertenciaCantidad" style="display:none;">
-        <div class="mensaje-contenido warning">
-            <div class="mensaje-icono">⚠️</div>
-            <div class="mensaje-texto" id="textoAdvertenciaCantidad">No puedes ingresar una cantidad mayor que el stock disponible.</div>
-            <button class="mensaje-cerrar" onclick="cerrarModalAdvertencia()">Cerrar</button>
+    <!-- Modales existentes -->
+    <div id="myModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-plus-circle"></i> Nuevo Movimiento</h3>
+                <span class="close" onclick="cerrarModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <form method="POST" id="modalForm">
+                    <label for="idproducto">Producto *</label>
+                    <select name="idproducto" id="idproducto" required>
+                        <option value="">Seleccione un producto</option>
+                        <?php foreach ($productos as $p): ?>
+                            <option value="<?= $p['idproducto'] ?>"><?= htmlspecialchars($p['nombre']) ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                    <label for="tipo">Tipo *</label>
+                    <select name="tipo" id="tipo" required>
+                        <option value="entrada">Entrada</option>
+                        <option value="salida">Salida</option>
+                    </select>
+                    <div id="stockDisponibleContainer" style="display:none; margin-top: 5px;">
+                        <strong>Stock disponible:</strong> <span id="stockDisponibleTexto">0</span>
+                    </div>
+                    <label for="cantidad">Cantidad *</label>
+                    <input type="number" name="cantidad" id="cantidad" min="1" required>
+                    <div class="comentario-container">
+                        <label for="comentario">Comentario * (máx. 255 caracteres)</label>
+                        <textarea name="comentario" id="comentario" required placeholder="Ingrese un comentario"></textarea>
+                        <div id="contador-caracteres">255 caracteres restantes</div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn-secondary" onclick="cerrarModal()"><i class="fas fa-times"></i> Cancelar</button>
+                        <button type="submit" class="btn-primary"><i class="fas fa-save"></i> Guardar</button>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
 
-<script>
-document.addEventListener('DOMContentLoaded', function () {
-    const tipoSelect = document.getElementById('tipo');
-    const productoSelect = document.getElementById('idproducto');
-    const stockContainer = document.getElementById('stockDisponibleContainer');
-    const stockTexto = document.getElementById('stockDisponibleTexto');
-    const cantidadInput = document.getElementById('cantidad');
-    const modalAdvertencia = document.getElementById('modalAdvertenciaCantidad');
-    const textoAdvertencia = document.getElementById('textoAdvertenciaCantidad');
-    let stockActual = 0;
-    let timeoutModal;
+    <div id="successModal" class="success-modal" style="<?php echo ($mensaje && $tipoMensaje === 'success') ? 'display: flex;' : ''; ?>">
+        <div class="success-modal-content">
+            <i class="fas fa-check-circle"></i>
+            <h3>¡Éxito!</h3>
+            <p><?= isset($mensaje) ? $mensaje : 'Movimiento registrado correctamente.' ?></p>
+            <button onclick="cerrarSuccessModal()">Aceptar</button>
+        </div>
+    </div>
 
-    function mostrarModalAdvertencia(mensaje) {
-        textoAdvertencia.textContent = mensaje;
-        modalAdvertencia.style.display = 'flex';
-        if(timeoutModal) clearTimeout(timeoutModal);
-        timeoutModal = setTimeout(() => {
-            modalAdvertencia.style.display = 'none';
-        }, 20000);
-    }
+    <div id="warningModal" class="warning-modal">
+        <div class="warning-modal-content">
+            <i class="fas fa-exclamation-triangle"></i>
+            <h3>Advertencia</h3>
+            <p id="warningMessage">Mensaje de advertencia</p>
+            <button onclick="cerrarWarningModal()">Aceptar</button>
+        </div>
+    </div>
 
-    window.cerrarModalAdvertencia = function () {
-        modalAdvertencia.style.display = 'none';
-        if(timeoutModal) clearTimeout(timeoutModal);
-    }
-
-    function actualizarStockVisible() {
-        const tipo = tipoSelect.value.toLowerCase();
-        const idProducto = productoSelect.value;
-
-        if (tipo === 'salida' && idProducto) {
-            fetch(`../inventario/obtener_stock.php?idproducto=${idProducto}`)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        stockActual = parseInt(data.stock, 10);
-                        stockTexto.textContent = stockActual;
-                        stockContainer.style.display = 'block';
-                        cantidadInput.max = stockActual;
-                        if (parseInt(cantidadInput.value, 10) > stockActual) {
-                            cantidadInput.value = stockActual;
-                            mostrarModalAdvertencia(`La cantidad máxima disponible para salida es ${stockActual}. Se ha ajustado el valor.`);
-                        }
-                    } else {
-                        stockActual = 0;
-                        stockTexto.textContent = '0';
-                        stockContainer.style.display = 'block';
-                        cantidadInput.max = 0;
-                        cantidadInput.value = 0;
-                    }
-                });
-        } else {
-            stockActual = 0;
-            stockContainer.style.display = 'none';
-            cantidadInput.removeAttribute('max');
+    <script>
+        function mostrarModal() {
+            document.getElementById('myModal').style.display = 'block';
         }
-    }
+        function cerrarModal() {
+            document.getElementById('myModal').style.display = 'none';
+        }
+        function cerrarSuccessModal() {
+            const successModal = document.getElementById('successModal');
+            successModal.style.display = 'none';
+            window.location.reload();
+        }
+        function mostrarWarningModal(mensaje) {
+            const warningModal = document.getElementById('warningModal');
+            const warningMessage = document.getElementById('warningMessage');
+            warningMessage.textContent = mensaje;
+            warningModal.style.display = 'flex';
+        }
+        function cerrarWarningModal() {
+            const warningModal = document.getElementById('warningModal');
+            warningModal.style.display = 'none';
+        }
+        function verComentario(comentario) {
+            document.getElementById('textoComentario').value = comentario;
+            document.getElementById('comentarioModal').style.display = 'block';
+        }
+        function cerrarComentarioModal() {
+            document.getElementById('comentarioModal').style.display = 'none';
+        }
+        function cambiarPorPagina(valor) {
+            const url = new URL(window.location);
+            url.searchParams.set('por_pagina', valor);
+            url.searchParams.set('pagina', '1');
+            window.location.href = url.toString();
+        }
+        window.onclick = function(event) {
+            const modal = document.getElementById('myModal');
+            const successModal = document.getElementById('successModal');
+            const warningModal = document.getElementById('warningModal');
+            const comentarioModal = document.getElementById('comentarioModal');
+            if (event.target === modal) cerrarModal();
+            if (event.target === successModal) cerrarSuccessModal();
+            if (event.target === warningModal) cerrarWarningModal();
+            if (event.target === comentarioModal) cerrarComentarioModal();
+        }
 
-    tipoSelect.addEventListener('change', actualizarStockVisible);
-    productoSelect.addEventListener('change', actualizarStockVisible);
-
-    cantidadInput.addEventListener('input', () => {
-        if (tipoSelect.value.toLowerCase() === 'salida') {
-            const val = parseInt(cantidadInput.value, 10);
-            if (val > stockActual) {
-                cantidadInput.value = stockActual;
-                mostrarModalAdvertencia(`No puedes ingresar una cantidad mayor que el stock disponible *** ${stockActual} ***.`);
+        function makeDraggable(element, dragHandle) {
+            let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+            dragHandle.onmousedown = dragMouseDown;
+            function dragMouseDown(e) {
+                e = e || window.event;
+                e.preventDefault();
+                pos3 = e.clientX;
+                pos4 = e.clientY;
+                document.onmouseup = closeDragElement;
+                document.onmousemove = elementDrag;
+            }
+            function elementDrag(e) {
+                e = e || window.event;
+                e.preventDefault();
+                pos1 = pos3 - e.clientX;
+                pos2 = pos4 - e.clientY;
+                pos3 = e.clientX;
+                pos4 = e.clientY;
+                element.style.top = (element.offsetTop - pos2) + "px";
+                element.style.left = (element.offsetLeft - pos1) + "px";
+            }
+            function closeDragElement() {
+                document.onmouseup = null;
+                document.onmousemove = null;
             }
         }
-    });
-});
-</script>
+
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('openModal').addEventListener('click', mostrarModal);
+
+            const comentarioModal = document.getElementById('comentarioModal');
+            if (comentarioModal) {
+                const content = comentarioModal.querySelector('.modal-content');
+                const header = comentarioModal.querySelector('.modal-header');
+                if (content && header) {
+                    makeDraggable(content, header);
+                }
+            }
+
+            const modal = document.getElementById('myModal');
+            if (modal) {
+                const modalContent = modal.querySelector('.modal-content');
+                const dragHandle = modal.querySelector('.modal-header');
+                if (modalContent && dragHandle) {
+                    makeDraggable(modalContent, dragHandle);
+                }
+            }
+
+            const comentarioTextarea = document.getElementById('comentario');
+            const contador = document.getElementById('contador-caracteres');
+            comentarioTextarea.addEventListener('input', function() {
+                const restantes = 255 - this.value.length;
+                contador.textContent = `${restantes} caracteres restantes`;
+                if (restantes < 0) {
+                    contador.style.color = '#dc3545';
+                    this.value = this.value.substring(0, 255);
+                } else if (restantes < 30) {
+                    contador.style.color = '#ffc107';
+                } else {
+                    contador.style.color = '#666';
+                }
+            });
+
+            const tipoSelect = document.getElementById('tipo');
+            const productoSelect = document.getElementById('idproducto');
+            const stockContainer = document.getElementById('stockDisponibleContainer');
+            const stockTexto = document.getElementById('stockDisponibleTexto');
+            const cantidadInput = document.getElementById('cantidad');
+            let stockActual = 0;
+
+            function actualizarStockVisible() {
+                const tipo = tipoSelect.value.toLowerCase();
+                const idProducto = productoSelect.value;
+                if (tipo === 'salida' && idProducto) {
+                    fetch(`../inventario/obtener_stock.php?idproducto=${idProducto}`)
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                stockActual = parseInt(data.stock, 10);
+                                stockTexto.textContent = stockActual;
+                                stockContainer.style.display = 'block';
+                                cantidadInput.max = stockActual;
+                                if (parseInt(cantidadInput.value, 10) > stockActual) {
+                                    cantidadInput.value = stockActual;
+                                    mostrarWarningModal(`La cantidad máxima disponible para salida es ${stockActual}. Se ha ajustado el valor.`);
+                                }
+                            } else {
+                                stockActual = 0;
+                                stockTexto.textContent = '0';
+                                stockContainer.style.display = 'block';
+                                cantidadInput.max = 0;
+                                cantidadInput.value = 0;
+                            }
+                        });
+                } else {
+                    stockActual = 0;
+                    stockContainer.style.display = 'none';
+                    cantidadInput.removeAttribute('max');
+                }
+            }
+            tipoSelect.addEventListener('change', actualizarStockVisible);
+            productoSelect.addEventListener('change', actualizarStockVisible);
+            cantidadInput.addEventListener('input', () => {
+                if (tipoSelect.value.toLowerCase() === 'salida') {
+                    const val = parseInt(cantidadInput.value, 10);
+                    if (val > stockActual) {
+                        cantidadInput.value = stockActual;
+                        mostrarWarningModal(`No puedes ingresar una cantidad mayor que el stock disponible (${stockActual}).`);
+                    }
+                }
+            });
+
+            <?php if ($mensaje && $tipoMensaje === 'success'): ?>
+                document.getElementById('successModal').style.display = 'flex';
+            <?php endif; ?>
+        });
+    </script>
 </body>
 </html>

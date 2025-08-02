@@ -488,7 +488,6 @@ if (isset($_GET['eliminar'])) {
                 <thead>
                     <tr>
                         <th>Nombre</th>
-                        <th>Activo</th>
                         <th>Acciones</th>
                     </tr>
                 </thead>
@@ -496,7 +495,6 @@ if (isset($_GET['eliminar'])) {
                 <?php foreach ($categorias as $c): ?>
                     <tr>
                         <td><?= htmlspecialchars($c['nombre']) ?></td>
-                        <td><?= $c['activo'] ? 'Sí' : 'No' ?></td>
                         <td>
                             <button class="action-btn edit-btn" onclick="abrirModalEdicion(<?= $c['idcategoria'] ?>, '<?= htmlspecialchars($c['nombre'], ENT_QUOTES) ?>')" title="Editar">
                                 <i class="fas fa-pencil-alt"></i>
