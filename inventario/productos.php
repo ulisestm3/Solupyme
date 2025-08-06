@@ -119,47 +119,6 @@ if (isset($_GET['eliminar'])) {
             display: flex;
             height: 100vh;
         }
-        .sidebar {
-            width: 200px;
-            background-color: #352b56ff;
-            color: white;
-            display: flex;
-            flex-direction: column;
-            padding: 1rem 1rem;
-        }
-        .sidebar h2 {
-            font-size: 1.25rem;
-            margin-bottom: 1.5rem;
-            text-align: center;
-            font-weight: bold;
-        }
-        .sidebar nav a {
-            color: white;
-            text-decoration: none;
-            padding: 0.6rem 1rem;
-            border-radius: 6px;
-            margin-bottom: 0.4rem;
-            display: block;
-            transition: background-color 0.3s ease;
-            font-size: 0.9rem;
-        }
-        .sidebar nav a:hover {
-            background-color: #0066cc;
-        }
-        .sidebar .logout-btn {
-            margin-top: auto;
-            background-color: #5596ebff;
-            padding: 0.6rem 1rem;
-            border-radius: 6px;
-            text-align: center;
-            font-weight: bold;
-            cursor: pointer;
-            transition: background-color 0.3s ease;
-            font-size: 0.9rem;
-        }
-        .sidebar .logout-btn:hover {
-            background-color: #a3ad4cff;
-        }
         .main-content {
             flex: 1;
             padding: 1rem 1.5rem;
@@ -458,33 +417,6 @@ if (isset($_GET['eliminar'])) {
             .container {
                 flex-direction: column;
             }
-            .sidebar {
-                width: 100%;
-                flex-direction: row;
-                overflow-x: auto;
-                padding: 0.5rem;
-            }
-            .sidebar h2 {
-                flex: 1 0 auto;
-                margin-bottom: 0;
-                padding-right: 1rem;
-                text-align: left;
-                font-size: 1rem;
-            }
-            .sidebar nav {
-                display: flex;
-                gap: 1rem;
-            }
-            .sidebar nav a {
-                margin-bottom: 0;
-                padding: 0.5rem 0.8rem;
-                font-size: 0.8rem;
-            }
-            .sidebar .logout-btn {
-                margin-top: 0;
-                padding: 0.5rem 0.8rem;
-                font-size: 0.8rem;
-            }
             .main-content {
                 padding: 1rem;
                 margin: 0;
@@ -507,17 +439,9 @@ if (isset($_GET['eliminar'])) {
 </head>
 <body>
     <div class="container">
-        <aside class="sidebar">
-            <h2><i class="fas fa-store"></i> AWFerreteria</h2>
-            <nav>
-                <a href="../admin/dashboard_admin.php"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
-                <a href="../inventario/productos.php"><i class="fas fa-boxes"></i> Productos</a>
-                <a href="../inventario/categorias.php"><i class="fas fa-tags"></i> Categorías</a>
-                <a href="../inventario/movimientos.php"><i class="fas fa-exchange-alt"></i> Movimientos</a>
-                <a href="../inventario/stock_bajo.php"><i class="fas fa-exclamation-triangle"></i> Stock Bajo</a>
-            </nav>
-            <a href="../auth/logout.php" class="logout-btn"><i class="fas fa-sign-out-alt"></i> Cerrar sesión</a>
-        </aside>
+        <!--sidebar_inventario-->
+        <?php include('../includes/sidebar_inventario.php'); ?>
+
         <main class="main-content">
             <h3><i class="fas fa-boxes"></i> Gestión de Productos</h3> <br>
 

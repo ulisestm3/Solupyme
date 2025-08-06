@@ -60,48 +60,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             display: flex;
             height: 100vh;
         }
-        /* Sidebar */
-        .sidebar {
-            width: 200px;
-            background-color: #352b56;
-            color: white;
-            display: flex;
-            flex-direction: column;
-            padding: 1rem;
-        }
-        .sidebar h2 {
-            font-size: 1.25rem;
-            margin-bottom: 1.5rem;
-            text-align: center;
-            font-weight: bold;
-        }
-        .sidebar nav a {
-            color: white;
-            text-decoration: none;
-            padding: 0.6rem 1rem;
-            border-radius: 6px;
-            margin-bottom: 0.4rem;
-            display: block;
-            transition: background-color 0.3s ease;
-            font-size: 0.9rem;
-        }
-        .sidebar nav a:hover {
-            background-color: #0066cc;
-        }
-        .sidebar .logout-btn {
-            margin-top: auto;
-            background-color: #5596eb;
-            padding: 0.6rem 1rem;
-            border-radius: 6px;
-            text-align: center;
-            font-weight: bold;
-            cursor: pointer;
-            transition: background-color 0.3s ease;
-            font-size: 0.9rem;
-        }
-        .sidebar .logout-btn:hover {
-            background-color: #a3ad4c;
-        }
         /* Main content */
         .main-content {
             flex: 1;
@@ -190,36 +148,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             .container {
                 flex-direction: column;
             }
-            .sidebar {
-                width: 100%;
-                flex-direction: row;
-                overflow-x: auto;
-                padding: 0.5rem;
-            }
-            .sidebar h2 {
-                flex: 1 0 auto;
-                margin-bottom: 0;
-                padding-right: 1rem;
-                text-align: left;
-                font-size: 1rem;
-            }
-            .sidebar nav {
-                display: flex;
-                gap: 1rem;
-                overflow-x: auto;
-                padding-bottom: 0.5rem;
-            }
-            .sidebar nav a {
-                white-space: nowrap;
-                margin-bottom: 0;
-                padding: 0.5rem 0.8rem;
-                font-size: 0.8rem;
-            }
-            .sidebar .logout-btn {
-                margin-top: 0;
-                padding: 0.5rem 0.8rem;
-                font-size: 0.8rem;
-            }
             .main-content {
                 padding: 1rem;
                 margin: 0;
@@ -240,36 +168,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </head>
 <body>
     <div class="container">
-        <aside class="sidebar">
-            <h2>AWFerreteria</h2>
-            <nav>
-                <?php
-                    $idusuario = $_SESSION['idusuario'];
-                    $menus = obtenerMenusUsuario($idusuario);
-                    $clavesMenus = array_column($menus, 'clave');
-                ?>
-                <a href="../admin/dashboard_admin.php">Dashboard</a>
-                <?php if (in_array('usuarios', $clavesMenus)): ?>
-                    <a href="../roles/usuarios.php">Usuarios</a>
-                <?php endif; ?>
-                <?php if (in_array('roles', $clavesMenus)): ?>
-                    <a href="../roles/roles.php">Roles</a>
-                <?php endif; ?>
-                <?php if (in_array('asignar_pagina', $clavesMenus)): ?>
-                    <a href="../admin/permisos_por_rol.php">Asignar Páginas</a>
-                <?php endif; ?>
-                <?php if (in_array('permiso_pagina', $clavesMenus)): ?>
-                    <a href="../roles/asignar_permisos.php">Permisos Páginas</a>
-                <?php endif; ?>
-                <?php if (in_array('asignar_menu', $clavesMenus)): ?>
-                    <a href="../admin/asignar_menu_usuario.php">Asignar Menús</a>
-                <?php endif; ?>
-                <?php if (in_array('permiso_menu', $clavesMenus)): ?>
-                    <a href="../roles/permisos_usuarios_menus.php">Permisos Menús</a>
-                <?php endif; ?>
-            </nav>
-            <a href="../auth/logout.php" class="logout-btn">Cerrar sesión</a>
-        </aside>
+        <!--sidebar_seguridad-->
+        <?php include('../includes/sidebar_seguridad.php'); ?>
+
         <main class="main-content">
             <h2>Asignar Permisos a Página</h2>
             <div class="card-permisos">
