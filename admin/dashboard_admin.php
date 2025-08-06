@@ -391,7 +391,10 @@ $rolNombre = $_SESSION['nombrerol'];
 </head>
 <body>
     <div class="container">
-        <?php include '../includes/sidebar.php'; ?>
+
+        <!-- llama sidebar -->
+        <?php include '../includes/sidebar_dashboard.php'; ?>
+
         <main class="main-content">
             <h1><i class="fas fa-tachometer-alt"></i> Panel de administración</h1>
 
@@ -402,28 +405,52 @@ $rolNombre = $_SESSION['nombrerol'];
                 <p><i class="fas fa-id-card"></i> ID de rol: <strong><?= $rolId; ?></strong></p>
             </div>
 
+            <?php if (in_array('1.0.gestion_usuarios', $clavesMenus)): ?>
             <section>
                 <h2><span><i class="fas fa-users-cog"></i> Gestión de usuarios</span></h2>
                 <ul>
-                    <li><a href="../roles/usuarios.php"><i class="fas fa-user"></i> Usuarios</a></li>
-                    <li><a href="../roles/roles.php"><i class="fas fa-user-tag"></i> Roles</a></li>
-                    <li><a href="../admin/permisos_por_rol.php"><i class="fas fa-user-shield"></i> Asignar Páginas</a></li>
-                    <li><a href="../roles/asignar_permisos.php"><i class="fas fa-lock"></i> Permisos Páginas</a></li>
-                    <li><a href="../admin/asignar_menu_usuario.php"><i class="fas fa-bars"></i> Asignar Menús</a></li>
-                    <li><a href="../roles/permisos_usuarios_menus.php"><i class="fas fa-list"></i> Permisos Menús</a></li>
+                    <?php if (in_array('1.1.usuarios', $clavesMenus)): ?>
+                        <li><a href="../roles/usuarios.php"><i class="fas fa-user"></i> Usuarios</a></li>
+                    <?php endif; ?>
+                    <?php if (in_array('1.2.roles', $clavesMenus)): ?>
+                        <li><a href="../roles/roles.php"><i class="fas fa-user-tag"></i> Roles</a></li>
+                    <?php endif; ?>
+                    <?php if (in_array('1.3.asignar_pagina', $clavesMenus)): ?>
+                        <li><a href="../admin/permisos_por_rol.php"><i class="fas fa-user-shield"></i> Asignar Páginas</a></li>
+                    <?php endif; ?>
+                    <?php if (in_array('1.4.permiso_pagina', $clavesMenus)): ?>
+                        <li><a href="../roles/asignar_permisos.php"><i class="fas fa-lock"></i> Permisos Páginas</a></li>
+                    <?php endif; ?>
+                    <?php if (in_array('1.5.asignar_menu', $clavesMenus)): ?>
+                        <li><a href="../admin/asignar_menu_usuario.php"><i class="fas fa-bars"></i> Asignar Menús</a></li>
+                    <?php endif; ?>
+                    <?php if (in_array('1.6.permiso_menu', $clavesMenus)): ?>
+                        <li><a href="../roles/permisos_usuarios_menus.php"><i class="fas fa-list"></i> Permisos Menús</a></li>
+                    <?php endif; ?>
                 </ul>
             </section>
+            <?php endif; ?>
 
+            <?php if (in_array('2.0.gestion_productos', $clavesMenus)): ?>
             <section>
                 <h2><span><i class="fas fa-boxes"></i> Gestión de productos</span></h2>
                 <ul>
-                    <li><a href="../inventario/productos.php"><i class="fas fa-box"></i> Productos</a></li>
-                    <li><a href="../inventario/categorias.php"><i class="fas fa-tags"></i> Categorías</a></li>
-                    <li><a href="../inventario/movimientos.php"><i class="fas fa-exchange-alt"></i> Movimientos</a></li>
-                    <li><a href="../inventario/stock_bajo.php"><i class="fas fa-exclamation-triangle"></i> Stock Bajo</a></li>
+                    <?php if (in_array('2.1.productos', $clavesMenus)): ?>
+                        <li><a href="../inventario/productos.php"><i class="fas fa-box"></i> Productos</a></li>
+                    <?php endif; ?>
+                <?php if (in_array('2.2.categorias', $clavesMenus)): ?>
+                        <li><a href="../inventario/categorias.php"><i class="fas fa-tags"></i> Categorías</a></li>
+                    <?php endif; ?>
+                    <?php if (in_array('2.3.movimientos', $clavesMenus)): ?>
+                        <li><a href="../inventario/movimientos.php"><i class="fas fa-exchange-alt"></i> Movimientos</a></li>
+                    <?php endif; ?>
+                    <?php if (in_array('2.4.stock_bajo', $clavesMenus)): ?>
+                        <li><a href="../inventario/stock_bajo.php"><i class="fas fa-exclamation-triangle"></i> Stock Bajo</a></li>
+                    <?php endif; ?>
                 </ul>
             </section>
-
+            <?php endif; ?>
+            <?php if (in_array('3.0.auditoria', $clavesMenus)): ?>
             <section>
                 <h2><span><i class="fas fa-clipboard-list"></i> Auditoría y actividad</span></h2>
                 <ul>
@@ -431,6 +458,7 @@ $rolNombre = $_SESSION['nombrerol'];
                     <li><a href="/admin/reset/listado.php"><i class="fas fa-key"></i> Solicitudes de recuperación</a></li>
                 </ul>
             </section>
+            <?php endif; ?>
 
             <div class="admin-footer">
                 <p><i class="fas fa-copyright"></i> Panel de Administración AWFerreteria | © <?= date('Y'); ?> | Versión 2.1.0</p>

@@ -243,45 +243,53 @@ $clavesMenus = array_column($menus, 'clave');
     <button id="toggleSidebar" class="hamburger-btn" title="Mostrar/Ocultar menú">☰</button>
     <h2><i class="fas fa-tools"></i> AWFerreteria</h2>
     <nav>
-        <?php if (in_array('gestion_usuarios', $clavesMenus)): ?>
+        <?php if (in_array('1.0.gestion_usuarios', $clavesMenus)): ?>
         <button class="accordion-btn">
             <span><i class="fas fa-users-cog"></i> Gestión de usuarios</span>
         </button>
         <div class="accordion-panel">
-            <?php if (in_array('usuarios', $clavesMenus)): ?>
+            <?php if (in_array('1.1.usuarios', $clavesMenus)): ?>
                 <a href="../roles/usuarios.php"><i class="fas fa-user"></i> Usuarios</a>
             <?php endif; ?>
-            <?php if (in_array('roles', $clavesMenus)): ?>
+            <?php if (in_array('1.2.roles', $clavesMenus)): ?>
                 <a href="../roles/roles.php"><i class="fas fa-user-tag"></i> Roles</a>
             <?php endif; ?>
-            <?php if (in_array('asignar_pagina', $clavesMenus)): ?>
+            <?php if (in_array('1.3.asignar_pagina', $clavesMenus)): ?>
                 <a href="../admin/permisos_por_rol.php"><i class="fas fa-user-shield"></i> Asignar Páginas</a>
             <?php endif; ?>
-            <?php if (in_array('permiso_pagina', $clavesMenus)): ?>
+            <?php if (in_array('1.4.permiso_pagina', $clavesMenus)): ?>
                 <a href="../roles/asignar_permisos.php"><i class="fas fa-lock"></i> Permisos Páginas</a>
             <?php endif; ?>
-            <?php if (in_array('asignar_menu', $clavesMenus)): ?>
+            <?php if (in_array('1.5.asignar_menu', $clavesMenus)): ?>
                 <a href="../admin/asignar_menu_usuario.php"><i class="fas fa-bars"></i> Asignar Menús</a>
             <?php endif; ?>
-            <?php if (in_array('permiso_menu', $clavesMenus)): ?>
+            <?php if (in_array('1.6.permiso_menu', $clavesMenus)): ?>
                 <a href="../roles/permisos_usuarios_menus.php"><i class="fas fa-list"></i> Permisos Menús</a>
             <?php endif; ?>
         </div>
         <?php endif; ?>
 
-        <?php if (in_array('gestion_productos', $clavesMenus)): ?>
+        <?php if (in_array('2.0.gestion_productos', $clavesMenus)): ?>
         <button class="accordion-btn">
             <span><i class="fas fa-boxes"></i> Gestión de productos</span>
         </button>
         <div class="accordion-panel">
-            <a href="../inventario/productos.php"><i class="fas fa-box"></i> Productos</a>
-            <a href="../inventario/categorias.php"><i class="fas fa-tags"></i> Categorías</a>
-            <a href="../inventario/movimientos.php"><i class="fas fa-exchange-alt"></i> Movimientos</a>
-            <a href="../inventario/stock_bajo.php"><i class="fas fa-exclamation-triangle"></i> Stock Bajo</a>
+            <?php if (in_array('2.1.productos', $clavesMenus)): ?>
+                <a href="../inventario/productos.php"><i class="fas fa-box"></i> Productos</a>
+            <?php endif; ?>
+            <?php if (in_array('2.2.categorias', $clavesMenus)): ?>
+                <a href="../inventario/categorias.php"><i class="fas fa-tags"></i> Categorías</a>
+            <?php endif; ?>
+            <?php if (in_array('2.3.movimientos', $clavesMenus)): ?>
+                <a href="../inventario/movimientos.php"><i class="fas fa-exchange-alt"></i> Movimientos</a>
+            <?php endif; ?>
+            <?php if (in_array('2.4.stock_bajo', $clavesMenus)): ?>
+                <a href="../inventario/stock_bajo.php"><i class="fas fa-exclamation-triangle"></i> Stock Bajo</a>
+            <?php endif; ?>
         </div>
         <?php endif; ?>
 
-        <?php if (in_array('auditoria', $clavesMenus)): ?>
+        <?php if (in_array('3.0.auditoria', $clavesMenus)): ?>
         <button class="accordion-btn">
             <span><i class="fas fa-clipboard-list"></i> Auditoría y actividad</span>
         </button>
