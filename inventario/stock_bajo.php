@@ -1,8 +1,10 @@
 <?php
 require_once('../config/database.php');
 require_once('../config/seguridad.php');
+verificarPermisoPagina();
+
 $conn = getConnection();
-$result = $conn->query("SELECT p.*, c.nombre AS categoria FROM productos p LEFT JOIN categorias c ON p.idcategoria = c.idcategoria WHERE p.stock <= p.stock_minimo AND p.activo = 1");
+$result = $conn->query("SELECT p.*, c.nombre AS categoria FROM productos p LEFT JOIN categorias c ON p.idcategoria = c.idcategoria WHERE p.stock < p.stock_minimo AND p.activo = 1");
 $alertas = $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
 ?>
 <!DOCTYPE html>
