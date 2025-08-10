@@ -8,12 +8,18 @@ $conn = getConnection();
 $roles = $conn->query("SELECT idrol, nombrerol FROM roles WHERE activo = b'1'")->fetch_all(MYSQLI_ASSOC);
 // Lista de páginas permitidas
 $paginasDisponibles = [
+    'usuarios.php',
+    'roles.php',
     'permisos_por_rol.php',
     'asignar_permisos.php',
-    'roles.php',
-    'usuarios.php',
     'asignar_menu_usuario.php',
-    'permisos_usuarios_menus.php'
+    'permisos_usuarios_menus.php',
+    'productos.php',
+    'categorias.php',
+    'movimientos.php',
+    'stock_bajo.php',
+    'proveedores.php',
+    'compras.php'
 ];
 $idrolSeleccionado = $_GET['idrol'] ?? $roles[0]['idrol'];
 // Obtener permisos actuales del rol

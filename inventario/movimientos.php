@@ -1,6 +1,8 @@
 <?php
 require_once('../config/database.php');
 require_once('../config/seguridad.php');
+verificarPermisoPagina();
+
 $conn = getConnection();
 $movimientos = [];
 $totalRegistros = 0;

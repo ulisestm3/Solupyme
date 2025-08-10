@@ -22,6 +22,8 @@ $clavesDisponibles = [
     '2.2.categorias',
     '2.3.movimientos',
     '2.4.stock_bajo',
+    '2.5.proveedores',
+    '2.6.compras',
     '3.0.auditoria'
 ];
 

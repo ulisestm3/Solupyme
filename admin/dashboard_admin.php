@@ -447,6 +447,12 @@ $rolNombre = $_SESSION['nombrerol'];
                     <?php if (in_array('2.4.stock_bajo', $clavesMenus)): ?>
                         <li><a href="../inventario/stock_bajo.php"><i class="fas fa-exclamation-triangle"></i> Stock Bajo</a></li>
                     <?php endif; ?>
+                    <?php if (in_array('2.5.proveedores', $clavesMenus)): ?>
+                        <li><a href="../proveedores/proveedores.php"><i class="fas fa-truck"></i> Proveedores</a></li>
+                    <?php endif; ?>
+                    <?php if (in_array('2.6.compras', $clavesMenus)): ?>
+                        <li><a href="../proveedores/compras.php"><i class="fas fa-shopping-cart"></i> Compras</a></li>
+                    <?php endif; ?>
                 </ul>
             </section>
             <?php endif; ?>
