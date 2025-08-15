@@ -114,6 +114,9 @@ $clavesMenus = array_column($menus, 'clave');
         <?php if (in_array('2.6.compras', $clavesMenus)): ?>
             <a href="../proveedores/compras.php"><i class="fas fa-shopping-cart"></i> Compras</a>
         <?php endif; ?>
+        <?php if (in_array('2.7.clientes', $clavesMenus)): ?>
+            <a href="../clientes/clientes.php"><i class="fas fa-handshake"></i> Clientes</a>
+        <?php endif; ?>
     </nav>
     <a href="../auth/logout.php" class="logout-btn"><i class="fas fa-sign-out-alt"></i> Cerrar sesión</a>
 </aside>

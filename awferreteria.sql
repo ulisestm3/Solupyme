@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 10-08-2025 a las 13:14:35
+-- Tiempo de generación: 15-08-2025 a las 13:28:34
 -- Versión del servidor: 10.4.32-MariaDB
 -- Versión de PHP: 8.2.12
 
@@ -45,6 +45,36 @@ INSERT INTO `categorias` (`idcategoria`, `nombre`, `activo`, `usuarioregistra`, 
 (10, 'Construcción', b'1', 1, '2025-08-01 07:26:32', NULL, NULL),
 (11, 'Electricos', b'1', 1, '2025-08-01 18:43:02', NULL, NULL),
 (12, 'Muebles', b'1', 1, '2025-08-01 21:22:26', NULL, NULL);
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `clientes`
+--
+
+CREATE TABLE `clientes` (
+  `idcliente` int(11) NOT NULL,
+  `nombre` varchar(100) NOT NULL,
+  `apellido` varchar(100) NOT NULL,
+  `identificacion` varchar(20) NOT NULL,
+  `tipo_identificacion` enum('CEDULA','RUC','PASAPORTE','OTRO') NOT NULL,
+  `telefono` varchar(20) DEFAULT NULL,
+  `email` varchar(100) DEFAULT NULL,
+  `direccion` text DEFAULT NULL,
+  `ciudad` varchar(50) DEFAULT NULL,
+  `activo` tinyint(1) DEFAULT 1,
+  `usuarioregistra` int(11) NOT NULL,
+  `fecharegistro` datetime DEFAULT current_timestamp(),
+  `usuarioactualiza` int(11) DEFAULT NULL,
+  `fechaactualizacion` datetime DEFAULT NULL ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Volcado de datos para la tabla `clientes`
+--
+
+INSERT INTO `clientes` (`idcliente`, `nombre`, `apellido`, `identificacion`, `tipo_identificacion`, `telefono`, `email`, `direccion`, `ciudad`, `activo`, `usuarioregistra`, `fecharegistro`, `usuarioactualiza`, `fechaactualizacion`) VALUES
+(1, 'Ulises', 'Zuniga', '0070204850001R', 'CEDULA', '84659917', 'ulisestm3@hotmail.com', 'Masaya', 'Masaya', 1, 1, '2025-08-15 03:03:53', 1, '2025-08-15 03:36:08');
 
 -- --------------------------------------------------------
 
@@ -115,39 +145,40 @@ CREATE TABLE `movimientos` (
   `cantidad` int(11) NOT NULL,
   `comentario` varchar(255) DEFAULT NULL,
   `fecha` datetime DEFAULT current_timestamp(),
-  `idusuario` int(11) DEFAULT NULL
+  `idusuario` int(11) DEFAULT NULL,
+  `Activo` bit(1) NOT NULL DEFAULT b'1'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Volcado de datos para la tabla `movimientos`
 --
 
-INSERT INTO `movimientos` (`idmovimiento`, `idproducto`, `tipo`, `cantidad`, `comentario`, `fecha`, `idusuario`) VALUES
-(1, 1, 'entrada', 3, 'Compra de producto', '2025-08-10 04:56:43', 1),
-(2, 2, 'entrada', 5, 'Compra de producto', '2025-08-10 04:56:43', 1),
-(3, 3, 'entrada', 10, 'Compra de producto', '2025-08-10 04:56:43', 1),
-(4, 1, 'salida', 3, 'Anulación por actualización', '2025-08-10 04:57:58', 1),
-(5, 2, 'salida', 5, 'Anulación por actualización', '2025-08-10 04:57:58', 1),
-(6, 3, 'salida', 10, 'Anulación por actualización', '2025-08-10 04:57:58', 1),
-(7, 1, 'entrada', 3, 'Actualización de compra', '2025-08-10 04:57:58', 1),
-(8, 3, 'entrada', 10, 'Actualización de compra', '2025-08-10 04:57:58', 1),
-(9, 2, 'entrada', 10, 'Actualización de compra', '2025-08-10 04:57:58', 1),
-(10, 1, 'salida', 3, 'Anulación por actualización', '2025-08-10 04:59:18', 1),
-(11, 3, 'salida', 10, 'Anulación por actualización', '2025-08-10 04:59:18', 1),
-(12, 2, 'salida', 10, 'Anulación por actualización', '2025-08-10 04:59:18', 1),
-(13, 3, 'entrada', 10, 'Actualización de compra', '2025-08-10 04:59:18', 1),
-(14, 2, 'entrada', 15, 'Actualización de compra', '2025-08-10 04:59:18', 1),
-(15, 3, 'salida', 10, 'Anulación por actualización', '2025-08-10 05:00:24', 1),
-(16, 2, 'salida', 15, 'Anulación por actualización', '2025-08-10 05:00:24', 1),
-(17, 2, 'entrada', 15, 'Actualización de compra', '2025-08-10 05:00:24', 1),
-(18, 3, 'entrada', 10, 'Actualización de compra', '2025-08-10 05:00:24', 1),
-(19, 1, 'entrada', 10, 'Actualización de compra', '2025-08-10 05:00:24', 1),
-(20, 2, 'salida', 15, 'Ajuste de compra anulada', '2025-08-10 05:03:20', 1),
-(21, 3, 'salida', 10, 'Ajuste de compra anulada', '2025-08-10 05:03:20', 1),
-(22, 1, 'salida', 10, 'Ajuste de compra anulada', '2025-08-10 05:03:20', 1),
-(23, 1, 'entrada', 5, 'Compra de producto', '2025-08-10 05:10:49', 1),
-(24, 2, 'entrada', 10, 'Compra de producto', '2025-08-10 05:10:49', 1),
-(25, 3, 'entrada', 3, 'Compra de producto', '2025-08-10 05:10:49', 1);
+INSERT INTO `movimientos` (`idmovimiento`, `idproducto`, `tipo`, `cantidad`, `comentario`, `fecha`, `idusuario`, `Activo`) VALUES
+(1, 1, 'entrada', 3, 'Compra de producto', '2025-08-10 04:56:43', 1, b'1'),
+(2, 2, 'entrada', 5, 'Compra de producto', '2025-08-10 04:56:43', 1, b'1'),
+(3, 3, 'entrada', 10, 'Compra de producto', '2025-08-10 04:56:43', 1, b'1'),
+(4, 1, 'salida', 3, 'Anulación por actualización', '2025-08-10 04:57:58', 1, b'1'),
+(5, 2, 'salida', 5, 'Anulación por actualización', '2025-08-10 04:57:58', 1, b'1'),
+(6, 3, 'salida', 10, 'Anulación por actualización', '2025-08-10 04:57:58', 1, b'1'),
+(7, 1, 'entrada', 3, 'Actualización de compra', '2025-08-10 04:57:58', 1, b'1'),
+(8, 3, 'entrada', 10, 'Actualización de compra', '2025-08-10 04:57:58', 1, b'1'),
+(9, 2, 'entrada', 10, 'Actualización de compra', '2025-08-10 04:57:58', 1, b'1'),
+(10, 1, 'salida', 3, 'Anulación por actualización', '2025-08-10 04:59:18', 1, b'1'),
+(11, 3, 'salida', 10, 'Anulación por actualización', '2025-08-10 04:59:18', 1, b'1'),
+(12, 2, 'salida', 10, 'Anulación por actualización', '2025-08-10 04:59:18', 1, b'1'),
+(13, 3, 'entrada', 10, 'Actualización de compra', '2025-08-10 04:59:18', 1, b'1'),
+(14, 2, 'entrada', 15, 'Actualización de compra', '2025-08-10 04:59:18', 1, b'1'),
+(15, 3, 'salida', 10, 'Anulación por actualización', '2025-08-10 05:00:24', 1, b'1'),
+(16, 2, 'salida', 15, 'Anulación por actualización', '2025-08-10 05:00:24', 1, b'1'),
+(17, 2, 'entrada', 15, 'Actualización de compra', '2025-08-10 05:00:24', 1, b'1'),
+(18, 3, 'entrada', 10, 'Actualización de compra', '2025-08-10 05:00:24', 1, b'1'),
+(19, 1, 'entrada', 10, 'Actualización de compra', '2025-08-10 05:00:24', 1, b'1'),
+(20, 2, 'salida', 15, 'Ajuste de compra anulada', '2025-08-10 05:03:20', 1, b'1'),
+(21, 3, 'salida', 10, 'Ajuste de compra anulada', '2025-08-10 05:03:20', 1, b'1'),
+(22, 1, 'salida', 10, 'Ajuste de compra anulada', '2025-08-10 05:03:20', 1, b'1'),
+(23, 1, 'entrada', 5, 'Compra de producto', '2025-08-10 05:10:49', 1, b'1'),
+(24, 2, 'entrada', 10, 'Compra de producto', '2025-08-10 05:10:49', 1, b'1'),
+(25, 3, 'entrada', 3, 'Compra de producto', '2025-08-10 05:10:49', 1, b'1');
 
 --
 -- Disparadores `movimientos`
@@ -162,7 +193,6 @@ CREATE TRIGGER `trg_actualizar_stock` AFTER INSERT ON `movimientos` FOR EACH ROW
 END
 $$
 DELIMITER ;
-
 DELIMITER $$
 CREATE TRIGGER `trg_validar_stock_salida` BEFORE INSERT ON `movimientos` FOR EACH ROW BEGIN
     DECLARE stock_actual INT;
@@ -199,18 +229,19 @@ CREATE TABLE `permisos` (
 --
 
 INSERT INTO `permisos` (`idpermiso`, `idrol`, `pagina`, `activo`, `usuarioregistra`, `fecharegistro`) VALUES
-(121, 1, 'asignar_menu_usuario.php', b'1', 1, '2025-08-10 03:06:36'),
-(122, 1, 'asignar_permisos.php', b'1', 1, '2025-08-10 03:06:36'),
-(123, 1, 'categorias.php', b'1', 1, '2025-08-10 03:06:36'),
-(124, 1, 'compras.php', b'1', 1, '2025-08-10 03:06:36'),
-(125, 1, 'movimientos.php', b'1', 1, '2025-08-10 03:06:36'),
-(126, 1, 'permisos_por_rol.php', b'1', 1, '2025-08-10 03:06:36'),
-(127, 1, 'permisos_usuarios_menus.php', b'1', 1, '2025-08-10 03:06:36'),
-(128, 1, 'productos.php', b'1', 1, '2025-08-10 03:06:36'),
-(129, 1, 'proveedores.php', b'1', 1, '2025-08-10 03:06:36'),
-(130, 1, 'roles.php', b'1', 1, '2025-08-10 03:06:36'),
-(131, 1, 'stock_bajo.php', b'1', 1, '2025-08-10 03:06:36'),
-(132, 1, 'usuarios.php', b'1', 1, '2025-08-10 03:06:36');
+(133, 1, 'asignar_menu_usuario.php', b'1', 1, '2025-08-15 02:52:25'),
+(134, 1, 'asignar_permisos.php', b'1', 1, '2025-08-15 02:52:25'),
+(135, 1, 'categorias.php', b'1', 1, '2025-08-15 02:52:25'),
+(136, 1, 'clientes.php', b'1', 1, '2025-08-15 02:52:25'),
+(137, 1, 'compras.php', b'1', 1, '2025-08-15 02:52:25'),
+(138, 1, 'movimientos.php', b'1', 1, '2025-08-15 02:52:25'),
+(139, 1, 'permisos_por_rol.php', b'1', 1, '2025-08-15 02:52:25'),
+(140, 1, 'permisos_usuarios_menus.php', b'1', 1, '2025-08-15 02:52:25'),
+(141, 1, 'productos.php', b'1', 1, '2025-08-15 02:52:25'),
+(142, 1, 'proveedores.php', b'1', 1, '2025-08-15 02:52:25'),
+(143, 1, 'roles.php', b'1', 1, '2025-08-15 02:52:25'),
+(144, 1, 'stock_bajo.php', b'1', 1, '2025-08-15 02:52:25'),
+(145, 1, 'usuarios.php', b'1', 1, '2025-08-15 02:52:25');
 
 -- --------------------------------------------------------
 
@@ -238,20 +269,21 @@ INSERT INTO `permisos_menus` (`idpermisomenu`, `idusuario`, `clave`, `activo`, `
 (249, 2, '2.3.movimientos', b'1', 1, '2025-08-10 02:25:22'),
 (250, 2, '2.4.stock_bajo', b'1', 1, '2025-08-10 02:25:22'),
 (251, 2, '2.5.proveedores', b'1', 1, '2025-08-10 02:25:22'),
-(252, 1, '1.0.gestion_usuarios', b'1', 1, '2025-08-10 03:03:31'),
-(253, 1, '1.1.usuarios', b'1', 1, '2025-08-10 03:03:31'),
-(254, 1, '1.2.roles', b'1', 1, '2025-08-10 03:03:31'),
-(255, 1, '1.3.asignar_pagina', b'1', 1, '2025-08-10 03:03:31'),
-(256, 1, '1.4.permiso_pagina', b'1', 1, '2025-08-10 03:03:31'),
-(257, 1, '1.5.asignar_menu', b'1', 1, '2025-08-10 03:03:31'),
-(258, 1, '1.6.permiso_menu', b'1', 1, '2025-08-10 03:03:31'),
-(259, 1, '2.0.gestion_productos', b'1', 1, '2025-08-10 03:03:31'),
-(260, 1, '2.1.productos', b'1', 1, '2025-08-10 03:03:31'),
-(261, 1, '2.2.categorias', b'1', 1, '2025-08-10 03:03:31'),
-(262, 1, '2.3.movimientos', b'1', 1, '2025-08-10 03:03:31'),
-(263, 1, '2.4.stock_bajo', b'1', 1, '2025-08-10 03:03:31'),
-(264, 1, '2.5.proveedores', b'1', 1, '2025-08-10 03:03:31'),
-(265, 1, '2.6.compras', b'1', 1, '2025-08-10 03:03:31');
+(266, 1, '1.0.gestion_usuarios', b'1', 1, '2025-08-15 02:52:36'),
+(267, 1, '1.1.usuarios', b'1', 1, '2025-08-15 02:52:36'),
+(268, 1, '1.2.roles', b'1', 1, '2025-08-15 02:52:36'),
+(269, 1, '1.3.asignar_pagina', b'1', 1, '2025-08-15 02:52:36'),
+(270, 1, '1.4.permiso_pagina', b'1', 1, '2025-08-15 02:52:36'),
+(271, 1, '1.5.asignar_menu', b'1', 1, '2025-08-15 02:52:36'),
+(272, 1, '1.6.permiso_menu', b'1', 1, '2025-08-15 02:52:36'),
+(273, 1, '2.0.gestion_productos', b'1', 1, '2025-08-15 02:52:36'),
+(274, 1, '2.1.productos', b'1', 1, '2025-08-15 02:52:36'),
+(275, 1, '2.2.categorias', b'1', 1, '2025-08-15 02:52:36'),
+(276, 1, '2.3.movimientos', b'1', 1, '2025-08-15 02:52:36'),
+(277, 1, '2.4.stock_bajo', b'1', 1, '2025-08-15 02:52:36'),
+(278, 1, '2.5.proveedores', b'1', 1, '2025-08-15 02:52:36'),
+(279, 1, '2.6.compras', b'1', 1, '2025-08-15 02:52:36'),
+(280, 1, '2.7.clientes', b'1', 1, '2025-08-15 02:52:36');
 
 -- --------------------------------------------------------
 
@@ -281,7 +313,7 @@ CREATE TABLE `productos` (
 INSERT INTO `productos` (`idproducto`, `nombre`, `idcategoria`, `descripcion`, `stock`, `stock_minimo`, `precio`, `activo`, `usuarioregistra`, `fecharegistro`, `usuarioactualiza`, `fechaactualizacion`) VALUES
 (1, 'Cemento Canal 25kg', 10, 'Cemento Canal 25kg', 5, 5, 280.00, b'1', 1, '2025-08-01 17:21:30', NULL, NULL),
 (2, 'Bujía 5W', 11, 'Bujía 5W', 10, 10, 180.00, b'1', 1, '2025-08-01 18:56:36', NULL, NULL),
-(3, 'Lampara 30w', 11, 'Lampara 30w', 3, 3, 230.00, b'1', 2, '2025-08-01 22:44:46', NULL, NULL);
+(3, 'Lampara 30w', 11, 'Lampara 30w', 3, 5, 230.00, b'1', 2, '2025-08-01 22:44:46', 1, '2025-08-15 04:44:24');
 
 -- --------------------------------------------------------
 
@@ -355,6 +387,7 @@ INSERT INTO `roles_paginas` (`idrol`, `pagina`, `activo`) VALUES
 (1, 'asignar_menu_usuario.php', b'1'),
 (1, 'asignar_permisos.php', b'1'),
 (1, 'categorias.php', b'1'),
+(1, 'clientes.php', b'1'),
 (1, 'compras.php', b'1'),
 (1, 'movimientos.php', b'1'),
 (1, 'permisos_por_rol.php', b'1'),
@@ -430,6 +463,7 @@ INSERT INTO `usuarios_menus` (`idusuario`, `clave`, `activo`) VALUES
 (1, '2.4.stock_bajo', b'1'),
 (1, '2.5.proveedores', b'1'),
 (1, '2.6.compras', b'1'),
+(1, '2.7.clientes', b'1'),
 (2, '2.0.gestion_productos', b'1'),
 (2, '2.1.productos', b'1'),
 (2, '2.2.categorias', b'1'),
@@ -439,6 +473,34 @@ INSERT INTO `usuarios_menus` (`idusuario`, `clave`, `activo`) VALUES
 
 -- --------------------------------------------------------
 
+--
+-- Estructura Stand-in para la vista `vista_permisos_menus`
+-- (Véase abajo para la vista actual)
+--
+CREATE TABLE `vista_permisos_menus` (
+`idusuario` int(11)
+,`usuario` varchar(50)
+,`clave` varchar(255)
+,`activo` bit(1)
+,`usuarioregistra` int(11)
+,`fecharegistro` datetime
+);
+
+-- --------------------------------------------------------
+
+--
+-- Estructura Stand-in para la vista `vista_roles_permisos`
+-- (Véase abajo para la vista actual)
+--
+CREATE TABLE `vista_roles_permisos` (
+`idrol` int(11)
+,`nombrerol` varchar(50)
+,`pagina` varchar(255)
+,`activo` bit(1)
+,`usuarioregistra` int(11)
+,`fecharegistro` datetime
+);
+
 -- --------------------------------------------------------
 
 --
@@ -446,7 +508,7 @@ INSERT INTO `usuarios_menus` (`idusuario`, `clave`, `activo`) VALUES
 --
 DROP TABLE IF EXISTS `vista_permisos_menus`;
 
-CREATE ALGORITHM=UNDEFINED SQL SECURITY DEFINER VIEW `vista_permisos_menus`  AS SELECT `pm`.`idusuario` AS `idusuario`, `u`.`usuario` AS `usuario`, `pm`.`clave` AS `clave`, `pm`.`activo` AS `activo`, `pm`.`usuarioregistra` AS `usuarioregistra`, `pm`.`fecharegistro` AS `fecharegistro` FROM (`permisos_menus` `pm` join `usuarios` `u` on(`pm`.`idusuario` = `u`.`idusuario`)) WHERE `pm`.`activo` = 1 ;
+CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `vista_permisos_menus`  AS SELECT `pm`.`idusuario` AS `idusuario`, `u`.`usuario` AS `usuario`, `pm`.`clave` AS `clave`, `pm`.`activo` AS `activo`, `pm`.`usuarioregistra` AS `usuarioregistra`, `pm`.`fecharegistro` AS `fecharegistro` FROM (`permisos_menus` `pm` join `usuarios` `u` on(`pm`.`idusuario` = `u`.`idusuario`)) WHERE `pm`.`activo` = 1 ;
 
 -- --------------------------------------------------------
 
@@ -455,7 +517,7 @@ CREATE ALGORITHM=UNDEFINED SQL SECURITY DEFINER VIEW `vista_permisos_menus`  AS 
 --
 DROP TABLE IF EXISTS `vista_roles_permisos`;
 
-CREATE ALGORITHM=UNDEFINED SQL SECURITY DEFINER VIEW `vista_roles_permisos`  AS SELECT `r`.`idrol` AS `idrol`, `r`.`nombrerol` AS `nombrerol`, `p`.`pagina` AS `pagina`, `p`.`activo` AS `activo`, `p`.`usuarioregistra` AS `usuarioregistra`, `p`.`fecharegistro` AS `fecharegistro` FROM (`roles` `r` left join `permisos` `p` on(`r`.`idrol` = `p`.`idrol`)) WHERE `r`.`activo` = 0x01 ;
+CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `vista_roles_permisos`  AS SELECT `r`.`idrol` AS `idrol`, `r`.`nombrerol` AS `nombrerol`, `p`.`pagina` AS `pagina`, `p`.`activo` AS `activo`, `p`.`usuarioregistra` AS `usuarioregistra`, `p`.`fecharegistro` AS `fecharegistro` FROM (`roles` `r` left join `permisos` `p` on(`r`.`idrol` = `p`.`idrol`)) WHERE `r`.`activo` = 0x01 ;
 
 --
 -- Índices para tablas volcadas
@@ -466,6 +528,13 @@ CREATE ALGORITHM=UNDEFINED SQL SECURITY DEFINER VIEW `vista_roles_permisos`  AS 
 --
 ALTER TABLE `categorias`
   ADD PRIMARY KEY (`idcategoria`);
+
+--
+-- Indices de la tabla `clientes`
+--
+ALTER TABLE `clientes`
+  ADD PRIMARY KEY (`idcliente`),
+  ADD UNIQUE KEY `identificacion` (`identificacion`);
 
 --
 -- Indices de la tabla `compras`
@@ -554,6 +623,12 @@ ALTER TABLE `categorias`
   MODIFY `idcategoria` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
 
 --
+-- AUTO_INCREMENT de la tabla `clientes`
+--
+ALTER TABLE `clientes`
+  MODIFY `idcliente` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+
+--
 -- AUTO_INCREMENT de la tabla `compras`
 --
 ALTER TABLE `compras`
@@ -575,13 +650,13 @@ ALTER TABLE `movimientos`
 -- AUTO_INCREMENT de la tabla `permisos`
 --
 ALTER TABLE `permisos`
-  MODIFY `idpermiso` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=133;
+  MODIFY `idpermiso` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=146;
 
 --
 -- AUTO_INCREMENT de la tabla `permisos_menus`
 --
 ALTER TABLE `permisos_menus`
-  MODIFY `idpermisomenu` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=266;
+  MODIFY `idpermisomenu` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=281;
 
 --
 -- AUTO_INCREMENT de la tabla `productos`

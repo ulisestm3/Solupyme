@@ -454,9 +454,13 @@ if (isset($_GET['eliminar'])) {
                 </div>
             <?php endif; ?>
 
-            <button class="btn" onclick="mostrarModalNuevo()"><i class="fas fa-plus"></i> Agregar Producto</button>
 
-            <table>
+            <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 15px; max-width: 420px;">
+                <button class="btn" onclick="mostrarModalNuevo()" style="margin-bottom: 0;"><i class="fas fa-plus"></i> Agregar Producto</button>
+                <input type="text" id="busquedaProducto" placeholder="Buscar..." style="flex: 1 1 0px; min-width: 0; padding: 7px 10px; border-radius: 4px; border: 1px solid #ccc; font-size: 14px; margin-bottom: 0;">
+            </div>
+
+            <table id="tablaProductos">
                 <thead>
                     <tr>
                         <th>Nombre</th>
@@ -468,7 +472,15 @@ if (isset($_GET['eliminar'])) {
                     </tr>
                 </thead>
                 <tbody>
-                <?php foreach ($productos as $p): ?>
+                <?php
+                // --- PAGINACIÓN ---
+                $porPagina = 10;
+                $pagina = isset($_GET['pagina']) ? max(1, intval($_GET['pagina'])) : 1;
+                $offset = ($pagina - 1) * $porPagina;
+                $totalRegistros = count($productos);
+                $totalPaginas = ceil($totalRegistros / $porPagina);
+                $productosPagina = array_slice($productos, $offset, $porPagina);
+                foreach ($productosPagina as $p): ?>
                     <tr>
                         <td><?= htmlspecialchars($p['nombre']) ?></td>
                         <td><?= htmlspecialchars($p['categoria']) ?></td>
@@ -487,6 +499,39 @@ if (isset($_GET['eliminar'])) {
                 <?php endforeach; ?>
                 </tbody>
             </table>
+
+            <!-- Paginación -->
+            <div style="margin-top: 15px; display: flex; justify-content: flex-end; align-items: center; gap: 5px;">
+                <?php if ($totalPaginas > 1): ?>
+                    <nav aria-label="Paginación">
+                        <ul style="list-style: none; display: flex; gap: 3px; padding: 0; margin: 0;">
+                            <?php if ($pagina > 1): ?>
+                                <li><a href="?pagina=<?= $pagina - 1 ?>" class="btn" style="padding: 4px 10px; font-size: 13px;">&laquo;</a></li>
+                            <?php endif; ?>
+                            <?php for ($i = 1; $i <= $totalPaginas; $i++): ?>
+                                <li><a href="?pagina=<?= $i ?>" class="btn" style="padding: 4px 10px; font-size: 13px;<?= $i == $pagina ? ' background: #2563eb;' : '' ?>"><?= $i ?></a></li>
+                            <?php endfor; ?>
+                            <?php if ($pagina < $totalPaginas): ?>
+                                <li><a href="?pagina=<?= $pagina + 1 ?>" class="btn" style="padding: 4px 10px; font-size: 13px;">&raquo;</a></li>
+                            <?php endif; ?>
+                        </ul>
+                    </nav>
+                <?php endif; ?>
+            </div>
+        <script>
+        // Búsqueda inline para productos
+        document.addEventListener('DOMContentLoaded', function() {
+            const input = document.getElementById('busquedaProducto');
+            const tabla = document.getElementById('tablaProductos').getElementsByTagName('tbody')[0];
+            input.addEventListener('keyup', function() {
+                const filtro = input.value.toLowerCase();
+                for (let fila of tabla.rows) {
+                    let texto = fila.textContent.toLowerCase();
+                    fila.style.display = texto.includes(filtro) ? '' : 'none';
+                }
+            });
+        });
+        </script>
 
             <div id="modalNuevoProducto" class="modal">
                 <div class="modal-content">

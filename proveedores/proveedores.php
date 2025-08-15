@@ -241,9 +241,12 @@ if (isset($_GET['eliminar'])) {
                 </div>
             <?php endif; ?>
 
-            <button class="btn" id="openModal"><i class="fas fa-plus"></i> Agregar Proveedor</button>
+            <div style="display: flex; gap: 10px; align-items: center; margin: 10px 0 20px 0; flex-wrap: wrap;">
+                <button class="btn" id="openModal" style="margin-bottom:0;"><i class="fas fa-plus"></i> Agregar Proveedor</button>
+                <input type="text" id="busquedaProveedor" class="form-control" placeholder="Buscar proveedor..." style="max-width:350px;width:100%;padding:8px 12px;border:1px solid #ccc;border-radius:4px;font-size:14px;">
+            </div>
 
-            <table>
+            <table id="tablaProveedores">
                 <thead>
                     <tr>
                         <th>Nombre</th>
@@ -254,7 +257,7 @@ if (isset($_GET['eliminar'])) {
                         <th>Acciones</th>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody id="tbodyProveedores">
                 <?php if (!empty($proveedores)): ?>
                     <?php foreach ($proveedores as $prov): ?>
                         <tr>
@@ -411,124 +414,155 @@ if (isset($_GET['eliminar'])) {
     </div>
 
     <script>
-        let idProveedorEliminar = null;
+    let idProveedorEliminar = null;
 
-        function mostrarModalNuevo() { document.getElementById('modalNuevoProveedor').style.display = 'block'; }
-        function cerrarModalNuevo() { document.getElementById('modalNuevoProveedor').style.display = 'none'; }
+    function mostrarModalNuevo() { 
+        document.getElementById('modalNuevoProveedor').style.display = 'block'; 
+    }
+    function cerrarModalNuevo() { 
+        document.getElementById('modalNuevoProveedor').style.display = 'none'; 
+    }
 
-        function abrirModalEditar(proveedor) {
-            document.getElementById('editar_idproveedor').value = proveedor.idproveedor;
-            document.getElementById('editar_nombre').value = proveedor.nombre || '';
-            document.getElementById('editar_contacto').value = proveedor.contacto || '';
-            document.getElementById('editar_telefono').value = proveedor.telefono || '';
-            document.getElementById('editar_correo').value = proveedor.correo || '';
-            document.getElementById('editar_direccion').value = proveedor.direccion || '';
-            document.getElementById('modalEditarProveedor').style.display = 'block';
+    function abrirModalEditar(proveedor) {
+        document.getElementById('editar_idproveedor').value = proveedor.idproveedor;
+        document.getElementById('editar_nombre').value = proveedor.nombre || '';
+        document.getElementById('editar_contacto').value = proveedor.contacto || '';
+        document.getElementById('editar_telefono').value = proveedor.telefono || '';
+        document.getElementById('editar_correo').value = proveedor.correo || '';
+        document.getElementById('editar_direccion').value = proveedor.direccion || '';
+        document.getElementById('modalEditarProveedor').style.display = 'block';
+    }
+    function cerrarModalEditar() { 
+        document.getElementById('modalEditarProveedor').style.display = 'none'; 
+    }
+
+    function abrirModalEliminar(id, nombre) {
+        idProveedorEliminar = id;
+        document.getElementById('nombreProveedorEliminar').textContent = nombre;
+        document.getElementById('modalEliminarProveedor').style.display = 'block';
+    }
+    function cerrarModalEliminar() { 
+        document.getElementById('modalEliminarProveedor').style.display = 'none'; 
+        idProveedorEliminar = null; 
+    }
+    function confirmarEliminar() {
+        if (idProveedorEliminar !== null) {
+            window.location.href = '?eliminar=' + idProveedorEliminar;
         }
-        function cerrarModalEditar() { document.getElementById('modalEditarProveedor').style.display = 'none'; }
+    }
 
-        function abrirModalEliminar(id, nombre) {
-            idProveedorEliminar = id;
-            document.getElementById('nombreProveedorEliminar').textContent = nombre;
-            document.getElementById('modalEliminarProveedor').style.display = 'block';
+    function cerrarSuccessModal() {
+        const successModal = document.getElementById('successModal');
+        successModal.style.display = 'none';
+        if (window.history.replaceState) {
+            const url = new URL(window.location.href);
+            window.history.replaceState({}, '', url.pathname + url.search);
         }
-        function cerrarModalEliminar() { document.getElementById('modalEliminarProveedor').style.display = 'none'; idProveedorEliminar = null; }
-        function confirmarEliminar() {
-            if (idProveedorEliminar !== null) {
-                window.location.href = '?eliminar=' + idProveedorEliminar;
-            }
+        window.location.reload();
+    }
+
+    function mostrarWarningModal(mensaje) {
+        const warningModal = document.getElementById('warningModal');
+        const warningMessage = document.getElementById('warningMessage');
+        warningMessage.textContent = mensaje;
+        warningModal.style.display = 'flex';
+    }
+    function cerrarWarningModal() { 
+        document.getElementById('warningModal').style.display = 'none'; 
+    }
+
+    function cambiarPorPagina(valor) {
+        const url = new URL(window.location);
+        url.searchParams.set('por_pagina', valor);
+        url.searchParams.set('pagina', '1');
+        window.location.href = url.toString();
+    }
+
+    // Cerrar modales haciendo clic fuera
+    window.onclick = function(event) {
+        const modalNuevo = document.getElementById('modalNuevoProveedor');
+        const modalEditar = document.getElementById('modalEditarProveedor');
+        const modalEliminar = document.getElementById('modalEliminarProveedor');
+        const successModal = document.getElementById('successModal');
+        const warningModal = document.getElementById('warningModal');
+        if (event.target === modalNuevo) cerrarModalNuevo();
+        if (event.target === modalEditar) cerrarModalEditar();
+        if (event.target === modalEliminar) cerrarModalEliminar();
+        if (event.target === successModal) cerrarSuccessModal();
+        if (event.target === warningModal) cerrarWarningModal();
+    }
+
+    // Hacer modales arrastrables
+    function makeDraggable(element, dragHandle) {
+        let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+        dragHandle.onmousedown = dragMouseDown;
+        function dragMouseDown(e) {
+            e = e || window.event;
+            e.preventDefault();
+            pos3 = e.clientX;
+            pos4 = e.clientY;
+            document.onmouseup = closeDragElement;
+            document.onmousemove = elementDrag;
         }
-
-        function cerrarSuccessModal() {
-            const successModal = document.getElementById('successModal');
-            successModal.style.display = 'none';
-            if (window.history.replaceState) {
-                const url = new URL(window.location.href);
-                // limpiar parámetros si existen
-                url.searchParams.delete('success');
-                window.history.replaceState({path: url.href}, '', url.href);
-            }
-            // recargar para refrescar lista después de cerrar
-            window.location.reload();
+        function elementDrag(e) {
+            e = e || window.event;
+            e.preventDefault();
+            pos1 = pos3 - e.clientX;
+            pos2 = pos4 - e.clientY;
+            pos3 = e.clientX;
+            pos4 = e.clientY;
+            element.style.top = (element.offsetTop - pos2) + "px";
+            element.style.left = (element.offsetLeft - pos1) + "px";
         }
-
-        function mostrarWarningModal(mensaje) {
-            const warningModal = document.getElementById('warningModal');
-            const warningMessage = document.getElementById('warningMessage');
-            warningMessage.textContent = mensaje;
-            warningModal.style.display = 'flex';
+        function closeDragElement() { 
+            document.onmouseup = null; 
+            document.onmousemove = null; 
         }
-        function cerrarWarningModal() { document.getElementById('warningModal').style.display = 'none'; }
+    }
 
-        function cambiarPorPagina(valor) {
-            const url = new URL(window.location);
-            url.searchParams.set('por_pagina', valor);
-            url.searchParams.set('pagina', '1');
-            window.location.href = url.toString();
-        }
+    // Inicialización al cargar el DOM
+    document.addEventListener('DOMContentLoaded', function() {
+        document.getElementById('openModal').addEventListener('click', mostrarModalNuevo);
 
-        // Cerrar modales haciendo clic fuera
-        window.onclick = function(event) {
-            const modalNuevo = document.getElementById('modalNuevoProveedor');
-            const modalEditar = document.getElementById('modalEditarProveedor');
-            const modalEliminar = document.getElementById('modalEliminarProveedor');
-            const successModal = document.getElementById('successModal');
-            const warningModal = document.getElementById('warningModal');
-            if (event.target === modalNuevo) cerrarModalNuevo();
-            if (event.target === modalEditar) cerrarModalEditar();
-            if (event.target === modalEliminar) cerrarModalEliminar();
-            if (event.target === successModal) cerrarSuccessModal();
-            if (event.target === warningModal) cerrarWarningModal();
-        }
-
-        // Hacer modales arrastrables (igual que en tu ejemplo)
-        function makeDraggable(element, dragHandle) {
-            let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
-            dragHandle.onmousedown = dragMouseDown;
-            function dragMouseDown(e) {
-                e = e || window.event;
-                e.preventDefault();
-                pos3 = e.clientX;
-                pos4 = e.clientY;
-                document.onmouseup = closeDragElement;
-                document.onmousemove = elementDrag;
-            }
-            function elementDrag(e) {
-                e = e || window.event;
-                e.preventDefault();
-                pos1 = pos3 - e.clientX;
-                pos2 = pos4 - e.clientY;
-                pos3 = e.clientX;
-                pos4 = e.clientY;
-                element.style.top = (element.offsetTop - pos2) + "px";
-                element.style.left = (element.offsetLeft - pos1) + "px";
-            }
-            function closeDragElement() { document.onmouseup = null; document.onmousemove = null; }
-        }
-
-        document.addEventListener('DOMContentLoaded', function() {
-            document.getElementById('openModal').addEventListener('click', mostrarModalNuevo);
-
-            const modales = [
-                { id: 'modalNuevoProveedor' },
-                { id: 'modalEditarProveedor' },
-                { id: 'modalEliminarProveedor' }
-            ];
-            modales.forEach(m => {
-                const modalElement = document.getElementById(m.id);
-                if (modalElement) {
-                    const modalContent = modalElement.querySelector('.modal-content');
-                    const dragHandle = modalElement.querySelector('.modal-header');
-                    if (modalContent && dragHandle) {
-                        makeDraggable(modalContent, dragHandle);
-                    }
+        const modales = [
+            { id: 'modalNuevoProveedor' },
+            { id: 'modalEditarProveedor' },
+            { id: 'modalEliminarProveedor' }
+        ];
+        modales.forEach(m => {
+            const modalElement = document.getElementById(m.id);
+            if (modalElement) {
+                const modalContent = modalElement.querySelector('.modal-content');
+                const dragHandle = modalElement.querySelector('.modal-header');
+                if (modalContent && dragHandle) {
+                    makeDraggable(modalContent, dragHandle);
                 }
-            });
-
-            <?php if ($mensaje && $tipoMensaje === 'success'): ?>
-                document.getElementById('successModal').style.display = 'flex';
-            <?php endif; ?>
+            }
         });
-    </script>
+
+        // 🔍 Búsqueda inline de proveedores
+        const inputBusqueda = document.getElementById('busquedaProveedor');
+        if (inputBusqueda) {
+            inputBusqueda.addEventListener('input', function() {
+                const filtro = inputBusqueda.value.toLowerCase().trim();
+                const filas = document.querySelectorAll('#tablaProveedores tbody tr');
+                filas.forEach(fila => {
+                    // Ignorar fila de "No hay proveedores"
+                    if (fila.querySelector('td[colspan]')) {
+                        fila.style.display = filtro ? 'none' : '';
+                        return;
+                    }
+                    const texto = fila.textContent.toLowerCase();
+                    fila.style.display = texto.includes(filtro) ? '' : 'none';
+                });
+            });
+        }
+
+        // Mostrar el modal de éxito si hay mensaje de éxito
+        <?php if ($mensaje && $tipoMensaje === 'success'): ?>
+            document.getElementById('successModal').style.display = 'flex';
+        <?php endif; ?>
+    });
+</script>
 </body>
 </html>
