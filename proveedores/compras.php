@@ -407,8 +407,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['editar_compra'])) {
                     <?php echo htmlspecialchars($mensaje); ?>
                 </div>
             <?php endif; ?>
-            <button class="btn" id="openModal"><i class="fas fa-plus"></i> Nueva Compra</button>
-            <table>
+            <div style="display: flex; gap: 10px; align-items: center; margin: 10px 0 20px 0; flex-wrap: wrap;">
+                <button class="btn" id="openModal" style="margin-bottom:0;"><i class="fas fa-plus"></i> Nueva Compra</button>
+                <input type="text" id="busquedaCompra" class="form-control" placeholder="Buscar compra..." style="max-width:350px;width:100%;padding:8px 12px;border:1px solid #ccc;border-radius:4px;font-size:14px;">
+            </div>
+            <table id="tablaCompras">
                 <thead>
                     <tr>
                         <th hidden="true">ID</th>
@@ -422,7 +425,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['editar_compra'])) {
                         <th>Acciones</th>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody id="tbodyCompras">
                 <?php if (!empty($compras)): ?>
                     <?php foreach ($compras as $compra): 
                         // Cargar datos completos para edición
@@ -947,8 +950,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['editar_compra'])) {
             });
         }
 
+        // Búsqueda inline de compras
         document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('openModal').addEventListener('click', abrirModalNuevaCompra);
+
+            // Hacer drag los modales principales
+            hacerDraggable('modalNuevaCompra', '.modal-header');
+            hacerDraggable('modalEditarCompra', '.modal-header');
+            hacerDraggable('modalEliminarCompra', '.modal-header');
+
+            // Búsqueda inline
+            const inputBusqueda = document.getElementById('busquedaCompra');
+            if (inputBusqueda) {
+                inputBusqueda.addEventListener('input', function() {
+                    const filtro = inputBusqueda.value.toLowerCase();
+                    const filas = document.querySelectorAll('#tablaCompras tbody tr');
+                    filas.forEach(fila => {
+                        let texto = fila.textContent.toLowerCase();
+                        if (texto.includes(filtro)) {
+                            fila.style.display = '';
+                        } else {
+                            fila.style.display = 'none';
+                        }
+                    });
+                });
+            }
 
             // Eventos para edición
             document.getElementById('agregarProductoEditar').addEventListener('click', function() {
@@ -1003,6 +1029,37 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['editar_compra'])) {
                 document.getElementById('successModal').style.display = 'flex';
             <?php endif; ?>
         });
+
+        // Función para hacer drag de los modales
+        function hacerDraggable(modalId, headerSelector) {
+            const modal = document.getElementById(modalId);
+            const header = modal.querySelector(headerSelector);
+            let offsetX = 0, offsetY = 0, mouseX = 0, mouseY = 0;
+            if (!header) return;
+            header.style.cursor = 'move';
+            header.onmousedown = function(e) {
+                e.preventDefault();
+                mouseX = e.clientX;
+                mouseY = e.clientY;
+                document.onmousemove = function(e2) {
+                    e2.preventDefault();
+                    offsetX = e2.clientX - mouseX;
+                    offsetY = e2.clientY - mouseY;
+                    const rect = modal.querySelector('.modal-content');
+                    let style = window.getComputedStyle(rect);
+                    let left = parseInt(style.left);
+                    let top = parseInt(style.top);
+                    rect.style.left = (left + offsetX) + 'px';
+                    rect.style.top = (top + offsetY) + 'px';
+                    mouseX = e2.clientX;
+                    mouseY = e2.clientY;
+                };
+                document.onmouseup = function() {
+                    document.onmousemove = null;
+                    document.onmouseup = null;
+                };
+            };
+        }
     </script>
 </body>
 </html>

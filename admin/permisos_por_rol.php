@@ -19,6 +19,7 @@ $paginasDisponibles = [
     'movimientos.php',
     'stock_bajo.php',
     'proveedores.php',
+    'clientes.php',
     'compras.php'
 ];
 $idrolSeleccionado = $_GET['idrol'] ?? $roles[0]['idrol'];

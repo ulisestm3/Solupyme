@@ -580,10 +580,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         <main class="main-content">
             <h3><i class="fas fa-exchange-alt"></i> Movimientos de Inventario (Kardex)</h3>
-            <button class="btn" id="openModal"><i class="fas fa-plus"></i> Agregar Registro</button>
-
+            <div style="display: flex; gap: 10px; align-items: center; margin: 10px 0 20px 0; flex-wrap: wrap;">
+                <button class="btn" id="openModal" style="margin-bottom:0;"><i class="fas fa-plus"></i> Agregar Registro</button>
+                <input type="text" id="busquedaMovimiento" class="form-control" placeholder="Buscar movimiento..." style="max-width:350px;width:100%;padding:8px 12px;border:1px solid #ccc;border-radius:4px;font-size:14px;">
+            </div>
             <!-- Tabla -->
-            <table>
+            <table id="tablaMovimientos">
                 <thead>
                     <tr>
                         <th hidden="true">ID</th>
@@ -595,7 +597,27 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                         <th>Usuario</th>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody id="tbodyMovimientos">
+    <script>
+    // Búsqueda inline de movimientos
+    document.addEventListener('DOMContentLoaded', function() {
+        const inputBusqueda = document.getElementById('busquedaMovimiento');
+        if (inputBusqueda) {
+            inputBusqueda.addEventListener('input', function() {
+                const filtro = inputBusqueda.value.toLowerCase();
+                const filas = document.querySelectorAll('#tablaMovimientos tbody tr');
+                filas.forEach(fila => {
+                    let texto = fila.textContent.toLowerCase();
+                    if (texto.includes(filtro)) {
+                        fila.style.display = '';
+                    } else {
+                        fila.style.display = 'none';
+                    }
+                });
+            });
+        }
+    });
+    </script>
                 <?php if (!empty($movimientos)) : ?>
                     <?php foreach ($movimientos as $mov) : ?>
                     <tr>

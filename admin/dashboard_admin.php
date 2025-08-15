@@ -453,6 +453,9 @@ $rolNombre = $_SESSION['nombrerol'];
                     <?php if (in_array('2.6.compras', $clavesMenus)): ?>
                         <li><a href="../proveedores/compras.php"><i class="fas fa-shopping-cart"></i> Compras</a></li>
                     <?php endif; ?>
+                    <?php if (in_array('2.7.clientes', $clavesMenus)): ?>
+                        <li><a href="../clientes/clientes.php"><i class="fas fa-handshake"></i> Clientes</a></li>
+                    <?php endif; ?>
                 </ul>
             </section>
             <?php endif; ?>
