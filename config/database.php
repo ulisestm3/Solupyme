@@ -2,7 +2,7 @@
 // database.php
 
 // Cambia esta variable según el entorno: 'dev' para desarrollo, 'prod' para producción
-$ENV = 'dev'; // Cambia a 'prod' cuando subas al servidor
+$ENV = 'prod'; // Cambia a 'prod' cuando subas al servidor
 
 function getConnection(): mysqli
 {
