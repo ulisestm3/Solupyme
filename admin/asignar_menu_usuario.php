@@ -25,6 +25,7 @@ $clavesDisponibles = [
     '2.5.proveedores',
     '2.6.compras',
     '2.7.clientes',
+    '2.8.facturas',
     '3.0.auditoria'
 ];
 
