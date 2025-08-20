@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 15-08-2025 a las 13:28:34
+-- Tiempo de generación: 21-08-2025 a las 00:04:13
 -- Versión del servidor: 10.4.32-MariaDB
 -- Versión de PHP: 8.2.12
 
@@ -135,6 +135,68 @@ INSERT INTO `compras_detalle` (`idcompra_detalle`, `idcompra`, `idproducto`, `ca
 -- --------------------------------------------------------
 
 --
+-- Estructura de tabla para la tabla `detalle_factura`
+--
+
+CREATE TABLE `detalle_factura` (
+  `iddetalle` int(11) NOT NULL,
+  `idfactura` int(11) NOT NULL,
+  `idproducto` int(11) NOT NULL,
+  `cantidad` int(11) NOT NULL,
+  `precio` decimal(10,2) NOT NULL,
+  `subtotal` decimal(10,2) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Volcado de datos para la tabla `detalle_factura`
+--
+
+INSERT INTO `detalle_factura` (`iddetalle`, `idfactura`, `idproducto`, `cantidad`, `precio`, `subtotal`) VALUES
+(1, 1, 1, 2, 280.00, 560.00),
+(2, 2, 2, 5, 180.00, 900.00),
+(3, 3, 1, 1, 280.00, 280.00),
+(4, 4, 1, 1, 280.00, 280.00),
+(5, 4, 2, 1, 180.00, 180.00),
+(6, 5, 2, 3, 180.00, 540.00),
+(7, 6, 3, 1, 230.00, 230.00),
+(8, 7, 3, 1, 230.00, 230.00);
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `facturas`
+--
+
+CREATE TABLE `facturas` (
+  `idfactura` int(11) NOT NULL,
+  `idcliente` int(11) NOT NULL,
+  `idusuario` int(11) NOT NULL,
+  `fecha` datetime DEFAULT current_timestamp(),
+  `total` decimal(10,2) NOT NULL,
+  `iva` decimal(10,2) DEFAULT 0.00,
+  `activo` bit(1) DEFAULT b'1',
+  `usuarioregistra` int(11) DEFAULT NULL,
+  `fecharegistro` datetime DEFAULT current_timestamp(),
+  `usuarioactualiza` int(11) DEFAULT NULL,
+  `fechaactualizacion` datetime DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Volcado de datos para la tabla `facturas`
+--
+
+INSERT INTO `facturas` (`idfactura`, `idcliente`, `idusuario`, `fecha`, `total`, `iva`, `activo`, `usuarioregistra`, `fecharegistro`, `usuarioactualiza`, `fechaactualizacion`) VALUES
+(1, 1, 1, '2025-08-20 13:03:35', 644.00, 84.00, b'1', 1, '2025-08-20 13:03:35', NULL, NULL),
+(2, 1, 1, '2025-08-20 13:10:15', 1035.00, 135.00, b'1', 1, '2025-08-20 13:10:15', NULL, NULL),
+(3, 1, 1, '2025-08-20 13:24:27', 322.00, 42.00, b'1', 1, '2025-08-20 13:24:27', NULL, NULL),
+(4, 1, 1, '2025-08-20 13:34:42', 529.00, 69.00, b'1', 1, '2025-08-20 13:34:42', NULL, NULL),
+(5, 1, 1, '2025-08-20 13:38:54', 621.00, 81.00, b'1', 1, '2025-08-20 13:38:54', NULL, NULL),
+(6, 1, 1, '2025-08-20 13:47:03', 264.50, 34.50, b'1', 1, '2025-08-20 13:47:03', NULL, NULL),
+(7, 1, 1, '2025-08-20 13:55:20', 264.50, 34.50, b'1', 1, '2025-08-20 13:55:20', NULL, NULL);
+
+-- --------------------------------------------------------
+
+--
 -- Estructura de tabla para la tabla `movimientos`
 --
 
@@ -178,7 +240,15 @@ INSERT INTO `movimientos` (`idmovimiento`, `idproducto`, `tipo`, `cantidad`, `co
 (22, 1, 'salida', 10, 'Ajuste de compra anulada', '2025-08-10 05:03:20', 1, b'1'),
 (23, 1, 'entrada', 5, 'Compra de producto', '2025-08-10 05:10:49', 1, b'1'),
 (24, 2, 'entrada', 10, 'Compra de producto', '2025-08-10 05:10:49', 1, b'1'),
-(25, 3, 'entrada', 3, 'Compra de producto', '2025-08-10 05:10:49', 1, b'1');
+(25, 3, 'entrada', 3, 'Compra de producto', '2025-08-10 05:10:49', 1, b'1'),
+(26, 1, 'salida', 2, 'Factura #1', '2025-08-20 13:03:35', 1, b'1'),
+(27, 2, 'salida', 5, 'Factura #2', '2025-08-20 13:10:15', 1, b'1'),
+(28, 1, 'salida', 1, 'Factura #3', '2025-08-20 13:24:27', 1, b'1'),
+(29, 1, 'salida', 1, 'Factura #4', '2025-08-20 13:34:42', 1, b'1'),
+(30, 2, 'salida', 1, 'Factura #4', '2025-08-20 13:34:42', 1, b'1'),
+(31, 2, 'salida', 3, 'Factura #5', '2025-08-20 13:38:54', 1, b'1'),
+(32, 3, 'salida', 1, 'Factura #6', '2025-08-20 13:47:03', 1, b'1'),
+(33, 3, 'salida', 1, 'Factura #7', '2025-08-20 13:55:20', 1, b'1');
 
 --
 -- Disparadores `movimientos`
@@ -229,19 +299,20 @@ CREATE TABLE `permisos` (
 --
 
 INSERT INTO `permisos` (`idpermiso`, `idrol`, `pagina`, `activo`, `usuarioregistra`, `fecharegistro`) VALUES
-(133, 1, 'asignar_menu_usuario.php', b'1', 1, '2025-08-15 02:52:25'),
-(134, 1, 'asignar_permisos.php', b'1', 1, '2025-08-15 02:52:25'),
-(135, 1, 'categorias.php', b'1', 1, '2025-08-15 02:52:25'),
-(136, 1, 'clientes.php', b'1', 1, '2025-08-15 02:52:25'),
-(137, 1, 'compras.php', b'1', 1, '2025-08-15 02:52:25'),
-(138, 1, 'movimientos.php', b'1', 1, '2025-08-15 02:52:25'),
-(139, 1, 'permisos_por_rol.php', b'1', 1, '2025-08-15 02:52:25'),
-(140, 1, 'permisos_usuarios_menus.php', b'1', 1, '2025-08-15 02:52:25'),
-(141, 1, 'productos.php', b'1', 1, '2025-08-15 02:52:25'),
-(142, 1, 'proveedores.php', b'1', 1, '2025-08-15 02:52:25'),
-(143, 1, 'roles.php', b'1', 1, '2025-08-15 02:52:25'),
-(144, 1, 'stock_bajo.php', b'1', 1, '2025-08-15 02:52:25'),
-(145, 1, 'usuarios.php', b'1', 1, '2025-08-15 02:52:25');
+(146, 1, 'asignar_menu_usuario.php', b'1', 1, '2025-08-20 11:05:52'),
+(147, 1, 'asignar_permisos.php', b'1', 1, '2025-08-20 11:05:52'),
+(148, 1, 'categorias.php', b'1', 1, '2025-08-20 11:05:52'),
+(149, 1, 'clientes.php', b'1', 1, '2025-08-20 11:05:52'),
+(150, 1, 'compras.php', b'1', 1, '2025-08-20 11:05:52'),
+(151, 1, 'facturas.php', b'1', 1, '2025-08-20 11:05:52'),
+(152, 1, 'movimientos.php', b'1', 1, '2025-08-20 11:05:52'),
+(153, 1, 'permisos_por_rol.php', b'1', 1, '2025-08-20 11:05:52'),
+(154, 1, 'permisos_usuarios_menus.php', b'1', 1, '2025-08-20 11:05:52'),
+(155, 1, 'productos.php', b'1', 1, '2025-08-20 11:05:52'),
+(156, 1, 'proveedores.php', b'1', 1, '2025-08-20 11:05:52'),
+(157, 1, 'roles.php', b'1', 1, '2025-08-20 11:05:52'),
+(158, 1, 'stock_bajo.php', b'1', 1, '2025-08-20 11:05:52'),
+(159, 1, 'usuarios.php', b'1', 1, '2025-08-20 11:05:52');
 
 -- --------------------------------------------------------
 
@@ -269,21 +340,22 @@ INSERT INTO `permisos_menus` (`idpermisomenu`, `idusuario`, `clave`, `activo`, `
 (249, 2, '2.3.movimientos', b'1', 1, '2025-08-10 02:25:22'),
 (250, 2, '2.4.stock_bajo', b'1', 1, '2025-08-10 02:25:22'),
 (251, 2, '2.5.proveedores', b'1', 1, '2025-08-10 02:25:22'),
-(266, 1, '1.0.gestion_usuarios', b'1', 1, '2025-08-15 02:52:36'),
-(267, 1, '1.1.usuarios', b'1', 1, '2025-08-15 02:52:36'),
-(268, 1, '1.2.roles', b'1', 1, '2025-08-15 02:52:36'),
-(269, 1, '1.3.asignar_pagina', b'1', 1, '2025-08-15 02:52:36'),
-(270, 1, '1.4.permiso_pagina', b'1', 1, '2025-08-15 02:52:36'),
-(271, 1, '1.5.asignar_menu', b'1', 1, '2025-08-15 02:52:36'),
-(272, 1, '1.6.permiso_menu', b'1', 1, '2025-08-15 02:52:36'),
-(273, 1, '2.0.gestion_productos', b'1', 1, '2025-08-15 02:52:36'),
-(274, 1, '2.1.productos', b'1', 1, '2025-08-15 02:52:36'),
-(275, 1, '2.2.categorias', b'1', 1, '2025-08-15 02:52:36'),
-(276, 1, '2.3.movimientos', b'1', 1, '2025-08-15 02:52:36'),
-(277, 1, '2.4.stock_bajo', b'1', 1, '2025-08-15 02:52:36'),
-(278, 1, '2.5.proveedores', b'1', 1, '2025-08-15 02:52:36'),
-(279, 1, '2.6.compras', b'1', 1, '2025-08-15 02:52:36'),
-(280, 1, '2.7.clientes', b'1', 1, '2025-08-15 02:52:36');
+(281, 1, '1.0.gestion_usuarios', b'1', 1, '2025-08-20 11:06:03'),
+(282, 1, '1.1.usuarios', b'1', 1, '2025-08-20 11:06:03'),
+(283, 1, '1.2.roles', b'1', 1, '2025-08-20 11:06:03'),
+(284, 1, '1.3.asignar_pagina', b'1', 1, '2025-08-20 11:06:03'),
+(285, 1, '1.4.permiso_pagina', b'1', 1, '2025-08-20 11:06:03'),
+(286, 1, '1.5.asignar_menu', b'1', 1, '2025-08-20 11:06:03'),
+(287, 1, '1.6.permiso_menu', b'1', 1, '2025-08-20 11:06:03'),
+(288, 1, '2.0.gestion_productos', b'1', 1, '2025-08-20 11:06:03'),
+(289, 1, '2.1.productos', b'1', 1, '2025-08-20 11:06:03'),
+(290, 1, '2.2.categorias', b'1', 1, '2025-08-20 11:06:03'),
+(291, 1, '2.3.movimientos', b'1', 1, '2025-08-20 11:06:03'),
+(292, 1, '2.4.stock_bajo', b'1', 1, '2025-08-20 11:06:03'),
+(293, 1, '2.5.proveedores', b'1', 1, '2025-08-20 11:06:03'),
+(294, 1, '2.6.compras', b'1', 1, '2025-08-20 11:06:03'),
+(295, 1, '2.7.clientes', b'1', 1, '2025-08-20 11:06:03'),
+(296, 1, '2.8.facturas', b'1', 1, '2025-08-20 11:06:03');
 
 -- --------------------------------------------------------
 
@@ -311,9 +383,9 @@ CREATE TABLE `productos` (
 --
 
 INSERT INTO `productos` (`idproducto`, `nombre`, `idcategoria`, `descripcion`, `stock`, `stock_minimo`, `precio`, `activo`, `usuarioregistra`, `fecharegistro`, `usuarioactualiza`, `fechaactualizacion`) VALUES
-(1, 'Cemento Canal 25kg', 10, 'Cemento Canal 25kg', 5, 5, 280.00, b'1', 1, '2025-08-01 17:21:30', NULL, NULL),
-(2, 'Bujía 5W', 11, 'Bujía 5W', 10, 10, 180.00, b'1', 1, '2025-08-01 18:56:36', NULL, NULL),
-(3, 'Lampara 30w', 11, 'Lampara 30w', 3, 5, 230.00, b'1', 2, '2025-08-01 22:44:46', 1, '2025-08-15 04:44:24');
+(1, 'Cemento Canal 25kg', 10, 'Cemento Canal 25kg', 1, 5, 280.00, b'1', 1, '2025-08-01 17:21:30', NULL, NULL),
+(2, 'Bujía 5W', 11, 'Bujía 5W', 1, 10, 180.00, b'1', 1, '2025-08-01 18:56:36', NULL, NULL),
+(3, 'Lampara 30w', 11, 'Lampara 30w', 1, 5, 230.00, b'1', 2, '2025-08-01 22:44:46', 1, '2025-08-15 04:44:24');
 
 -- --------------------------------------------------------
 
@@ -389,6 +461,7 @@ INSERT INTO `roles_paginas` (`idrol`, `pagina`, `activo`) VALUES
 (1, 'categorias.php', b'1'),
 (1, 'clientes.php', b'1'),
 (1, 'compras.php', b'1'),
+(1, 'facturas.php', b'1'),
 (1, 'movimientos.php', b'1'),
 (1, 'permisos_por_rol.php', b'1'),
 (1, 'permisos_usuarios_menus.php', b'1'),
@@ -464,6 +537,7 @@ INSERT INTO `usuarios_menus` (`idusuario`, `clave`, `activo`) VALUES
 (1, '2.5.proveedores', b'1'),
 (1, '2.6.compras', b'1'),
 (1, '2.7.clientes', b'1'),
+(1, '2.8.facturas', b'1'),
 (2, '2.0.gestion_productos', b'1'),
 (2, '2.1.productos', b'1'),
 (2, '2.2.categorias', b'1'),
@@ -550,6 +624,22 @@ ALTER TABLE `compras_detalle`
   ADD PRIMARY KEY (`idcompra_detalle`),
   ADD KEY `idcompra` (`idcompra`),
   ADD KEY `idproducto` (`idproducto`);
+
+--
+-- Indices de la tabla `detalle_factura`
+--
+ALTER TABLE `detalle_factura`
+  ADD PRIMARY KEY (`iddetalle`),
+  ADD KEY `idfactura` (`idfactura`),
+  ADD KEY `idproducto` (`idproducto`);
+
+--
+-- Indices de la tabla `facturas`
+--
+ALTER TABLE `facturas`
+  ADD PRIMARY KEY (`idfactura`),
+  ADD KEY `idcliente` (`idcliente`),
+  ADD KEY `idusuario` (`idusuario`);
 
 --
 -- Indices de la tabla `movimientos`
@@ -641,22 +731,34 @@ ALTER TABLE `compras_detalle`
   MODIFY `idcompra_detalle` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=15;
 
 --
+-- AUTO_INCREMENT de la tabla `detalle_factura`
+--
+ALTER TABLE `detalle_factura`
+  MODIFY `iddetalle` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
+
+--
+-- AUTO_INCREMENT de la tabla `facturas`
+--
+ALTER TABLE `facturas`
+  MODIFY `idfactura` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
+
+--
 -- AUTO_INCREMENT de la tabla `movimientos`
 --
 ALTER TABLE `movimientos`
-  MODIFY `idmovimiento` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=26;
+  MODIFY `idmovimiento` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=36;
 
 --
 -- AUTO_INCREMENT de la tabla `permisos`
 --
 ALTER TABLE `permisos`
-  MODIFY `idpermiso` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=146;
+  MODIFY `idpermiso` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=160;
 
 --
 -- AUTO_INCREMENT de la tabla `permisos_menus`
 --
 ALTER TABLE `permisos_menus`
-  MODIFY `idpermisomenu` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=281;
+  MODIFY `idpermisomenu` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=297;
 
 --
 -- AUTO_INCREMENT de la tabla `productos`
@@ -698,6 +800,20 @@ ALTER TABLE `compras`
 ALTER TABLE `compras_detalle`
   ADD CONSTRAINT `compras_detalle_ibfk_1` FOREIGN KEY (`idcompra`) REFERENCES `compras` (`idcompra`) ON DELETE CASCADE,
   ADD CONSTRAINT `compras_detalle_ibfk_2` FOREIGN KEY (`idproducto`) REFERENCES `productos` (`idproducto`);
+
+--
+-- Filtros para la tabla `detalle_factura`
+--
+ALTER TABLE `detalle_factura`
+  ADD CONSTRAINT `detalle_factura_ibfk_1` FOREIGN KEY (`idfactura`) REFERENCES `facturas` (`idfactura`),
+  ADD CONSTRAINT `detalle_factura_ibfk_2` FOREIGN KEY (`idproducto`) REFERENCES `productos` (`idproducto`);
+
+--
+-- Filtros para la tabla `facturas`
+--
+ALTER TABLE `facturas`
+  ADD CONSTRAINT `facturas_ibfk_1` FOREIGN KEY (`idcliente`) REFERENCES `clientes` (`idcliente`),
+  ADD CONSTRAINT `facturas_ibfk_2` FOREIGN KEY (`idusuario`) REFERENCES `usuarios` (`idusuario`);
 
 --
 -- Filtros para la tabla `movimientos`

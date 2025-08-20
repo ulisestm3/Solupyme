@@ -20,7 +20,8 @@ $paginasDisponibles = [
     'stock_bajo.php',
     'proveedores.php',
     'clientes.php',
-    'compras.php'
+    'compras.php',
+    'facturas.php'
 ];
 $idrolSeleccionado = $_GET['idrol'] ?? $roles[0]['idrol'];
 // Obtener permisos actuales del rol
