@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 21-08-2025 a las 00:04:13
+-- Tiempo de generación: 21-08-2025 a las 02:36:46
 -- Versión del servidor: 10.4.32-MariaDB
 -- Versión de PHP: 8.2.12
 
@@ -158,8 +158,10 @@ INSERT INTO `detalle_factura` (`iddetalle`, `idfactura`, `idproducto`, `cantidad
 (4, 4, 1, 1, 280.00, 280.00),
 (5, 4, 2, 1, 180.00, 180.00),
 (6, 5, 2, 3, 180.00, 540.00),
-(7, 6, 3, 1, 230.00, 230.00),
-(8, 7, 3, 1, 230.00, 230.00);
+(8, 7, 3, 1, 230.00, 230.00),
+(9, 6, 3, 2, 230.00, 460.00),
+(10, 8, 1, 1, 280.00, 280.00),
+(11, 9, 2, 1, 180.00, 180.00);
 
 -- --------------------------------------------------------
 
@@ -191,8 +193,10 @@ INSERT INTO `facturas` (`idfactura`, `idcliente`, `idusuario`, `fecha`, `total`,
 (3, 1, 1, '2025-08-20 13:24:27', 322.00, 42.00, b'1', 1, '2025-08-20 13:24:27', NULL, NULL),
 (4, 1, 1, '2025-08-20 13:34:42', 529.00, 69.00, b'1', 1, '2025-08-20 13:34:42', NULL, NULL),
 (5, 1, 1, '2025-08-20 13:38:54', 621.00, 81.00, b'1', 1, '2025-08-20 13:38:54', NULL, NULL),
-(6, 1, 1, '2025-08-20 13:47:03', 264.50, 34.50, b'1', 1, '2025-08-20 13:47:03', NULL, NULL),
-(7, 1, 1, '2025-08-20 13:55:20', 264.50, 34.50, b'1', 1, '2025-08-20 13:55:20', NULL, NULL);
+(6, 1, 1, '2025-08-20 13:47:03', 529.00, 69.00, b'1', 1, '2025-08-20 13:47:03', 1, '2025-08-20 16:16:33'),
+(7, 1, 1, '2025-08-20 13:55:20', 264.50, 34.50, b'0', 1, '2025-08-20 13:55:20', 1, '2025-08-20 16:15:43'),
+(8, 1, 1, '2025-08-20 17:56:14', 322.00, 42.00, b'1', 1, '2025-08-20 17:56:14', NULL, NULL),
+(9, 1, 1, '2025-08-20 18:07:27', 207.00, 27.00, b'1', 1, '2025-08-20 18:07:27', NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -248,7 +252,12 @@ INSERT INTO `movimientos` (`idmovimiento`, `idproducto`, `tipo`, `cantidad`, `co
 (30, 2, 'salida', 1, 'Factura #4', '2025-08-20 13:34:42', 1, b'1'),
 (31, 2, 'salida', 3, 'Factura #5', '2025-08-20 13:38:54', 1, b'1'),
 (32, 3, 'salida', 1, 'Factura #6', '2025-08-20 13:47:03', 1, b'1'),
-(33, 3, 'salida', 1, 'Factura #7', '2025-08-20 13:55:20', 1, b'1');
+(33, 3, 'salida', 1, 'Factura #7', '2025-08-20 13:55:20', 1, b'1'),
+(36, 3, 'entrada', 1, 'Anulación Factura #7', '2025-08-20 16:15:43', 1, b'1'),
+(37, 3, 'entrada', 1, 'Actualización Factura #6', '2025-08-20 16:16:33', 1, b'1'),
+(38, 3, 'salida', 2, 'Actualización Factura #6', '2025-08-20 16:16:33', 1, b'1'),
+(39, 1, 'salida', 1, 'Factura #8', '2025-08-20 17:56:14', 1, b'1'),
+(40, 2, 'salida', 1, 'Factura #9', '2025-08-20 18:07:27', 1, b'1');
 
 --
 -- Disparadores `movimientos`
@@ -383,8 +392,8 @@ CREATE TABLE `productos` (
 --
 
 INSERT INTO `productos` (`idproducto`, `nombre`, `idcategoria`, `descripcion`, `stock`, `stock_minimo`, `precio`, `activo`, `usuarioregistra`, `fecharegistro`, `usuarioactualiza`, `fechaactualizacion`) VALUES
-(1, 'Cemento Canal 25kg', 10, 'Cemento Canal 25kg', 1, 5, 280.00, b'1', 1, '2025-08-01 17:21:30', NULL, NULL),
-(2, 'Bujía 5W', 11, 'Bujía 5W', 1, 10, 180.00, b'1', 1, '2025-08-01 18:56:36', NULL, NULL),
+(1, 'Cemento Canal 25kg', 10, 'Cemento Canal 25kg', 0, 5, 280.00, b'1', 1, '2025-08-01 17:21:30', NULL, NULL),
+(2, 'Bujía 5W', 11, 'Bujía 5W', 0, 10, 180.00, b'1', 1, '2025-08-01 18:56:36', NULL, NULL),
 (3, 'Lampara 30w', 11, 'Lampara 30w', 1, 5, 230.00, b'1', 2, '2025-08-01 22:44:46', 1, '2025-08-15 04:44:24');
 
 -- --------------------------------------------------------
@@ -582,7 +591,7 @@ CREATE TABLE `vista_roles_permisos` (
 --
 DROP TABLE IF EXISTS `vista_permisos_menus`;
 
-CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `vista_permisos_menus`  AS SELECT `pm`.`idusuario` AS `idusuario`, `u`.`usuario` AS `usuario`, `pm`.`clave` AS `clave`, `pm`.`activo` AS `activo`, `pm`.`usuarioregistra` AS `usuarioregistra`, `pm`.`fecharegistro` AS `fecharegistro` FROM (`permisos_menus` `pm` join `usuarios` `u` on(`pm`.`idusuario` = `u`.`idusuario`)) WHERE `pm`.`activo` = 1 ;
+CREATE ALGORITHM=UNDEFINED   SQL SECURITY DEFINER VIEW `vista_permisos_menus`  AS SELECT `pm`.`idusuario` AS `idusuario`, `u`.`usuario` AS `usuario`, `pm`.`clave` AS `clave`, `pm`.`activo` AS `activo`, `pm`.`usuarioregistra` AS `usuarioregistra`, `pm`.`fecharegistro` AS `fecharegistro` FROM (`permisos_menus` `pm` join `usuarios` `u` on(`pm`.`idusuario` = `u`.`idusuario`)) WHERE `pm`.`activo` = 1 ;
 
 -- --------------------------------------------------------
 
@@ -591,7 +600,7 @@ CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW 
 --
 DROP TABLE IF EXISTS `vista_roles_permisos`;
 
-CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `vista_roles_permisos`  AS SELECT `r`.`idrol` AS `idrol`, `r`.`nombrerol` AS `nombrerol`, `p`.`pagina` AS `pagina`, `p`.`activo` AS `activo`, `p`.`usuarioregistra` AS `usuarioregistra`, `p`.`fecharegistro` AS `fecharegistro` FROM (`roles` `r` left join `permisos` `p` on(`r`.`idrol` = `p`.`idrol`)) WHERE `r`.`activo` = 0x01 ;
+CREATE ALGORITHM=UNDEFINED   SQL SECURITY DEFINER VIEW `vista_roles_permisos`  AS SELECT `r`.`idrol` AS `idrol`, `r`.`nombrerol` AS `nombrerol`, `p`.`pagina` AS `pagina`, `p`.`activo` AS `activo`, `p`.`usuarioregistra` AS `usuarioregistra`, `p`.`fecharegistro` AS `fecharegistro` FROM (`roles` `r` left join `permisos` `p` on(`r`.`idrol` = `p`.`idrol`)) WHERE `r`.`activo` = 0x01 ;
 
 --
 -- Índices para tablas volcadas
@@ -734,19 +743,19 @@ ALTER TABLE `compras_detalle`
 -- AUTO_INCREMENT de la tabla `detalle_factura`
 --
 ALTER TABLE `detalle_factura`
-  MODIFY `iddetalle` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
+  MODIFY `iddetalle` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
 
 --
 -- AUTO_INCREMENT de la tabla `facturas`
 --
 ALTER TABLE `facturas`
-  MODIFY `idfactura` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
+  MODIFY `idfactura` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
 
 --
 -- AUTO_INCREMENT de la tabla `movimientos`
 --
 ALTER TABLE `movimientos`
-  MODIFY `idmovimiento` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=36;
+  MODIFY `idmovimiento` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=41;
 
 --
 -- AUTO_INCREMENT de la tabla `permisos`
