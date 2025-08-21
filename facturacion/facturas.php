@@ -94,6 +94,7 @@ try {
     <title>Facturas - AWFerreteria</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
+        /* Estilos existentes (igual que tu código original) */
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body, html { height: 100%; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f6f85c; color: #333; }
         .container { display: flex; height: 100vh; }
@@ -107,43 +108,14 @@ try {
         .btn-primary:hover { background-color: #0056b3; }
         .btn-info { background-color: #17a2b8; color: white; padding: 6px 10px; font-size: 13px; }
         .btn-info:hover { background-color: #138496; }
-        .action-btn {
-            border: none;
-            background: none;
-            cursor: pointer;
-            padding: 5px 8px;
-            border-radius: 5px;
-            transition: 0.3s;
-        }
-
-        .action-btn i {
-            font-size: 14px;
-        }
-
-        .edit-btn {
-            color: #007bff;
-        }
-
-        .edit-btn:hover {
-            background-color: #e6f0ff;
-        }
-
-        .print-btn {
-            color: #28a745;
-        }
-
-        .print-btn:hover {
-            background-color: #eafaf1;
-        }
-
-        .delete-btn {
-            color: #dc3545;
-        }
-
-        .delete-btn:hover {
-            background-color: #fdecea;
-        }
-
+        .action-btn { border: none; background: none; cursor: pointer; padding: 5px 8px; border-radius: 5px; transition: 0.3s; }
+        .action-btn i { font-size: 14px; }
+        .edit-btn { color: #007bff; }
+        .edit-btn:hover { background-color: #e6f0ff; }
+        .print-btn { color: #28a745; }
+        .print-btn:hover { background-color: #eafaf1; }
+        .delete-btn { color: #dc3545; }
+        .delete-btn:hover { background-color: #fdecea; }
         table { width: 100%; border-collapse: collapse; background-color: #fff; font-size: 13px; margin-top: 10px; }
         th, td { padding: 10px 12px; border: 1px solid #ddd; text-align: left; }
         th { background-color: #007acc; color: white; font-weight: 600; }
@@ -160,57 +132,15 @@ try {
         .per-page-select { padding: 5px; border: 1px solid #ddd; border-radius: 4px; font-size: 13px; }
         .no-results { text-align: center; padding: 20px; color: #666; font-style: italic; }
 
-        /* Estilos para el modal */
-        .success-modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.5);
-            justify-content: center;
-            align-items: center;
-            z-index: 9999;
-        }
-        .success-modal-content {
-            background: white;
-            padding: 25px;
-            border-radius: 8px;
-            max-width: 400px;
-            text-align: center;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
-            animation: fadeIn 0.3s ease;
-        }
-        .success-modal-content i {
-            font-size: 50px;
-            margin-bottom: 10px;
-        }
-        .success-modal-content h3 {
-            margin: 0 0 10px 0;
-            color: #004080;
-        }
-        .success-modal-content p {
-            margin: 0 0 15px 0;
-            color: #555;
-            font-size: 14px;
-        }
-        .success-modal-content button {
-            padding: 8px 16px;
-            background-color: #007bff;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 14px;
-        }
-        .success-modal-content button:hover {
-            background-color: #0056b3;
-        }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(-10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
+        /* Estilos para modales (igual que tu código original) */
+        .success-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.5); justify-content: center; align-items: center; z-index: 9999; }
+        .success-modal-content { background: white; padding: 25px; border-radius: 8px; max-width: 400px; text-align: center; box-shadow: 0 4px 20px rgba(0,0,0,0.2); animation: fadeIn 0.3s ease; }
+        .success-modal-content i { font-size: 50px; margin-bottom: 10px; }
+        .success-modal-content h3 { margin: 0 0 10px 0; color: #004080; }
+        .success-modal-content p { margin: 0 0 15px 0; color: #555; font-size: 14px; }
+        .success-modal-content button { padding: 8px 16px; background-color: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; }
+        .success-modal-content button:hover { background-color: #0056b3; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body>
@@ -336,47 +266,53 @@ try {
     <script>
         // Funciones para cerrar modales
         function cerrarSuccessModal() {
-            document.getElementById('successModal').style.display = 'none';
+            const modal = document.getElementById('successModal');
+            if (modal) modal.style.display = 'none';
         }
 
         function cerrarErrorModal() {
-            document.getElementById('errorModal').style.display = 'none';
+            const modal = document.getElementById('errorModal');
+            if (modal) modal.style.display = 'none';
         }
 
-        // Búsqueda en tiempo real (inline)
+        // Búsqueda en tiempo real y paginación segura
         document.addEventListener('DOMContentLoaded', function () {
             const inputBusqueda = document.getElementById('busquedaFactura');
             const filas = document.querySelectorAll('#tbodyFacturas tr');
 
-            inputBusqueda.addEventListener('input', function () {
-                const filtro = inputBusqueda.value.toLowerCase().trim();
+            if (inputBusqueda) {
+                inputBusqueda.addEventListener('input', function () {
+                    const filtro = inputBusqueda.value.toLowerCase().trim();
 
-                // Actualizar URL sin recargar
-                const url = new URL(window.location);
-                if (filtro) {
-                    url.searchParams.set('busqueda', filtro);
-                } else {
-                    url.searchParams.delete('busqueda');
-                }
-                window.history.replaceState({}, '', url);
-
-                filas.forEach(fila => {
-                    if (fila.querySelector('td[colspan]')) {
-                        fila.style.display = filtro ? 'none' : '';
-                        return;
+                    // Actualizar URL sin recargar
+                    const url = new URL(window.location);
+                    if (filtro) {
+                        url.searchParams.set('busqueda', filtro);
+                    } else {
+                        url.searchParams.delete('busqueda');
                     }
-                    const texto = fila.textContent.toLowerCase();
-                    fila.style.display = texto.includes(filtro) ? '' : 'none';
-                });
-            });
+                    window.history.replaceState({}, '', url);
 
-            // Cambiar elementos por página
-            document.getElementById('por_pagina').addEventListener('change', function () {
-                const url = new URL(window.location);
-                url.searchParams.set('por_pagina', this.value);
-                url.searchParams.set('pagina', '1');
-                window.location.href = url.toString();
-            });
+                    filas.forEach(fila => {
+                        if (fila.querySelector('td[colspan]')) {
+                            fila.style.display = filtro ? 'none' : '';
+                            return;
+                        }
+                        const texto = fila.textContent.toLowerCase();
+                        fila.style.display = texto.includes(filtro) ? '' : 'none';
+                    });
+                });
+            }
+
+            const selectPorPagina = document.getElementById('por_pagina');
+            if (selectPorPagina) {
+                selectPorPagina.addEventListener('change', function () {
+                    const url = new URL(window.location);
+                    url.searchParams.set('por_pagina', this.value);
+                    url.searchParams.set('pagina', '1');
+                    window.location.href = url.toString();
+                });
+            }
         });
     </script>
 </body>
