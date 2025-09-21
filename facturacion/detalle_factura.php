@@ -72,7 +72,7 @@ unset($_SESSION['mensaje'], $_SESSION['tipoMensaje']);
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Editar Factura #<?= $factura['idfactura'] ?> - AWFerreteria</title>
+    <title>Editar Factura #<?= $factura['idfactura'] ?> </title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -542,7 +542,7 @@ unset($_SESSION['mensaje'], $_SESSION['tipoMensaje']);
 
         // Pasar productos disponibles a JavaScript
         const productosDisponibles = [
-            <?php foreach ($productosDisponibles as $p): ?>
+            <?php foreach ($productosDisponibles as $p): ?>,
                 {
                     id: <?= $p['idproducto'] ?>,
                     nombre: "<?= addslashes(htmlspecialchars($p['nombre'])) ?>",

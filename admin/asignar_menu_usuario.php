@@ -17,6 +17,7 @@ $clavesDisponibles = [
     '1.4.permiso_pagina',
     '1.5.asignar_menu',
     '1.6.permiso_menu',
+    '1.7.parametros',
     '2.0.gestion_productos',
     '2.1.productos',
     '2.2.categorias',
@@ -44,7 +45,7 @@ $clavesPermitidas = array_column($result->fetch_all(MYSQLI_ASSOC), 'clave');
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Panel de Menus - AWFerreteria</title>
+    <title>Panel de Menus</title>
      <style>
         /* Reset básico */
         * {

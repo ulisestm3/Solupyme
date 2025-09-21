@@ -1,6 +1,8 @@
 <?php
 require_once('../config/database.php');
 require_once('../config/seguridad.php');
+require_once('../config/datosempresa.php');
+
 //verificarPermisoPagina();
 
 $conn = getConnection();
@@ -34,7 +36,7 @@ $detalle = $stmtDetalle->get_result()->fetch_all(MYSQLI_ASSOC);
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Factura #<?= $factura['idfactura'] ?> - AWFerretería</title>
+    <title>Factura #<?= $factura['idfactura'] ?></title>
     <style>
         body { font-family: Arial, sans-serif; margin: 30px; color: #333; }
         .factura-container { 
@@ -84,9 +86,9 @@ $detalle = $stmtDetalle->get_result()->fetch_all(MYSQLI_ASSOC);
         <div class="sello-anulada">ANULADA</div>
     <?php endif; ?>
 
-    <h1>AWFerretería</h1>
+    <h1><?php echo getDatosEmpresa()['nombrecormercial']; ?></h1>
     <div class="datos-empresa">
-        <p>Dirección: Managua, Nicaragua</p>
+        <p>Dirección: <?php echo getDatosEmpresa()['nombrecormercial']; ?></p>
         <p>Tel: (505) 2222-3333</p>
     </div>
 

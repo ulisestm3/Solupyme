@@ -12,7 +12,7 @@ $productos = $conn->query("SELECT idproducto, nombre, precio, stock FROM product
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Nueva Factura - AWFerreteria</title>
+    <title>Nueva Factura</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -140,7 +140,7 @@ $productos = $conn->query("SELECT idproducto, nombre, precio, stock FROM product
         const productosDisponibles = [
             <?php 
             $productos->data_seek(0);
-            while ($p = $productos->fetch_assoc()): ?>
+            while ($p = $productos->fetch_assoc()): ?>,
                 {
                     id: <?= $p['idproducto'] ?>,
                     nombre: "<?= addslashes(htmlspecialchars($p['nombre'])) ?>",
