@@ -126,7 +126,7 @@ if (isset($_GET['desactivar'])) {
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Panel de Roles - AWFerreteria</title>
+    <title>Panel de Roles</title>
     <style>
         /* Reset básico */
         * {

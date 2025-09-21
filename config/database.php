@@ -2,7 +2,7 @@
 // database.php
 
 // Cambia esta variable según el entorno: 'dev' para desarrollo, 'prod' para producción
-$ENV = 'prod'; // Cambia a 'prod' cuando subas al servidor
+$ENV = 'dev'; // Cambia a 'prod' cuando subas al servidor
 
 function getConnection(): mysqli
 {
@@ -18,7 +18,7 @@ function getConnection(): mysqli
         $host     = 'localhost';
         $user     = 'root';
         $password = '';
-        $dbname   = 'awferreteria';
+        $dbname   = 'solupyme';
     }
 
     $mysqli = new mysqli($host, $user, $password, $dbname);

@@ -12,7 +12,7 @@ $alertas = $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Productos con Stock Bajo - AWFerreteria</title>
+    <title>Productos con Stock Bajo</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
        * {

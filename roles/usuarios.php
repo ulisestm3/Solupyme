@@ -155,7 +155,7 @@ $conn->close();
 <head>
 <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Panel de Usuarios - AWFerreteria</title>
+    <title>Panel de Usuarios</title>
     <style>
         /* Reset básico */
         * {

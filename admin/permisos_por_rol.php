@@ -14,6 +14,7 @@ $paginasDisponibles = [
     'asignar_permisos.php',
     'asignar_menu_usuario.php',
     'permisos_usuarios_menus.php',
+    'parametros.php',
     'productos.php',
     'categorias.php',
     'movimientos.php',
@@ -36,7 +37,7 @@ $paginasPermitidas = array_column($result->fetch_all(MYSQLI_ASSOC), 'pagina');
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Panel de Páginas - AWFerreteria</title>
+    <title>Panel de Páginas</title>
      <style>
         /* Reset básico */
         * {

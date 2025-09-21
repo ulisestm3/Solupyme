@@ -42,7 +42,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Panel de Permisos - AWFerreteria</title>
+    <title>Panel de Permisos</title>
     <style>
         /* Reset básico */
         * {

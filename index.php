@@ -1,4 +1,8 @@
 <?php
+
+require_once('config/database.php');
+require_once('config/datosempresa.php');
+
 if (session_status() !== PHP_SESSION_ACTIVE) {
     session_start();
 }
@@ -11,7 +15,7 @@ $errorMsg = isset($_GET['error']) ? htmlspecialchars($_GET['error']) : null;
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>AWFerreteria · Iniciar sesión</title>
+  <title> Iniciar sesión</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="../public/css/custom.css">
   <style>
@@ -69,7 +73,7 @@ $errorMsg = isset($_GET['error']) ? htmlspecialchars($_GET['error']) : null;
 </head>
 <body>
   <div class="card-login">
-    <h2>AWFerreteria</h2>
+    <h2> <?php echo getDatosEmpresa()['nombrecormercial']; ?></h2>
 
     <?php if ($errorMsg): ?>
       <div class="error-box"><?= $errorMsg ?></div>
@@ -91,7 +95,7 @@ $errorMsg = isset($_GET['error']) ? htmlspecialchars($_GET['error']) : null;
     </form>
 
     <div class="text-center mt-3">
-      ¿No tienes cuenta? <a href="/views/auth/registro.php" style="color:#004080; font-weight:bold;">Regístrate</a>
+      <p><i class="fas fa-copyright"></i>© <?= date('Y'); ?> | Versión 1.0</p>
     </div>
   </div>
 

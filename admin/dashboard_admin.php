@@ -1,5 +1,7 @@
 <?php
 require_once('../config/seguridad.php');
+require_once('../config/datosempresa.php');
+
 // Variables para mostrar en la bienvenida
 $usuarioId = $_SESSION['idusuario'];
 $usuarioNombre = $_SESSION['nombrecompleto'];
@@ -11,7 +13,7 @@ $rolNombre = $_SESSION['nombrerol'];
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Panel de administración - AWFerreteria</title>
+    <title>Panel de administración</title>
     <style>
         /* Paleta de colores mejorada inspirada en productos */
         :root {
@@ -427,6 +429,9 @@ $rolNombre = $_SESSION['nombrerol'];
                     <?php if (in_array('1.6.permiso_menu', $clavesMenus)): ?>
                         <li><a href="../roles/permisos_usuarios_menus.php"><i class="fas fa-list"></i> Permisos Menús</a></li>
                     <?php endif; ?>
+                    <?php if (in_array('1.7.parametros', $clavesMenus)): ?>
+                        <li><a href="../parametros/parametros.php"><i class="fas fa-cogs"></i> Parámetros</a></li>
+                    <?php endif; ?>
                 </ul>
             </section>
             <?php endif; ?>
@@ -473,7 +478,7 @@ $rolNombre = $_SESSION['nombrerol'];
             <?php endif; ?>
 
             <div class="admin-footer">
-                <p><i class="fas fa-copyright"></i> Panel de Administración AWFerreteria | © <?= date('Y'); ?> | Versión 2.1.0</p>
+                <p><i class="fas fa-copyright"></i> Panel de Administración <?php echo getDatosEmpresa()['nombrecormercial']; ?> | © <?= date('Y'); ?> | Versión 1.0</p>
             </div>
         </main>
     </div>
