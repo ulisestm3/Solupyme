@@ -431,6 +431,9 @@ $clavesMenus = array_column($menus, 'clave');
             <?php if (in_array('2.10.costo_producto', $clavesMenus)): ?>
                 <a href="../inventario/costo_producto.php"><i class="fas fa-dollar-sign"></i> Costo Producto</a>
             <?php endif; ?>
+            <?php if (in_array('2.11.ventas_proyectadas', $clavesMenus)): ?>
+                <a href="../inventario/ventas_proyectadas.php"><i class="fas fa-chart-line"></i> Ventas Proyectadas</a>
+            <?php endif; ?>
         </div>
         <?php endif; ?>
 

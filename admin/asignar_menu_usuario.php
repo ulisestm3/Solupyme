@@ -29,6 +29,7 @@ $clavesDisponibles = [
     '2.8.facturas',
     '2.9.precio_venta',
     '2.10.costo_producto',
+    '2.11.ventas_proyectadas',
     '3.0.auditoria'
 ];
 

@@ -353,6 +353,9 @@ $clavesMenus = array_column($menus, 'clave');
         <?php if (in_array('2.10.costo_producto', $clavesMenus)): ?>
             <a href="../inventario/costo_producto.php"><i class="fas fa-dollar-sign"></i> <span>Costo de Productos</span></a>
         <?php endif; ?>
+        <?php if (in_array('2.11.ventas_proyectadas', $clavesMenus)): ?>
+            <a href="../inventario/ventas_proyectadas.php"><i class="fas fa-chart-line"></i> <span>Ventas Proyectadas</span></a>
+        <?php endif; ?>
     </nav>
     <a href="../auth/logout.php" class="logout-btn">
         <i class="fas fa-sign-out-alt"></i> <span>Cerrar sesión</span>
