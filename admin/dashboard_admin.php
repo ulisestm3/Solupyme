@@ -403,8 +403,6 @@ $rolNombre = $_SESSION['nombrerol'];
             <div class="welcome-message">
                 <p><i class="fas fa-user-shield"></i> Bienvenido, <strong><?= htmlspecialchars($usuarioNombre); ?></strong></p>
                 <p><i class="fas fa-user-tag"></i> Tu rol es: <strong><?= htmlspecialchars($rolNombre); ?></strong></p>
-                <p><i class="fas fa-id-badge"></i> ID de usuario: <strong><?= $usuarioId; ?></strong></p>
-                <p><i class="fas fa-id-card"></i> ID de rol: <strong><?= $rolId; ?></strong></p>
             </div>
 
             <?php if (in_array('1.0.gestion_usuarios', $clavesMenus)): ?>
@@ -463,6 +461,12 @@ $rolNombre = $_SESSION['nombrerol'];
                     <?php endif; ?>
                     <?php if (in_array('2.8.facturas', $clavesMenus)): ?>
                         <li><a href="../facturacion/facturas.php"><i class="fas fa-file-invoice"></i> Facturas</a></li>
+                    <?php endif; ?>
+                    <?php if (in_array('2.9.precio_venta', $clavesMenus)): ?>
+                        <li><a href="../inventario/precio_venta.php"><i class="fas fa-tags"></i> Precio de Venta</a></li>
+                    <?php endif; ?>
+                    <?php if (in_array('2.10.costo_producto', $clavesMenus)): ?>
+                        <li><a href="../inventario/costo_producto.php"><i class="fas fa-dollar-sign"></i> Costo de Productos</a></li>
                     <?php endif; ?>
                 </ul>
             </section>

@@ -425,6 +425,12 @@ $clavesMenus = array_column($menus, 'clave');
             <?php if (in_array('2.8.facturas', $clavesMenus)): ?>
                 <a href="../facturacion/facturas.php"><i class="fas fa-file-invoice"></i> Facturas</a>
             <?php endif; ?>
+            <?php if (in_array('2.9.precio_venta', $clavesMenus)): ?>
+                <a href="../inventario/precio_venta.php"><i class="fas fa-tags"></i> Precio Venta</a>
+            <?php endif; ?>
+            <?php if (in_array('2.10.costo_producto', $clavesMenus)): ?>
+                <a href="../inventario/costo_producto.php"><i class="fas fa-dollar-sign"></i> Costo Producto</a>
+            <?php endif; ?>
         </div>
         <?php endif; ?>
 
