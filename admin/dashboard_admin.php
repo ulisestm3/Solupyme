@@ -468,6 +468,9 @@ $rolNombre = $_SESSION['nombrerol'];
                     <?php if (in_array('2.10.costo_producto', $clavesMenus)): ?>
                         <li><a href="../inventario/costo_producto.php"><i class="fas fa-dollar-sign"></i> Costo de Productos</a></li>
                     <?php endif; ?>
+                    <?php if (in_array('2.11.ventas_proyectadas', $clavesMenus)): ?>
+                        <li><a href="../inventario/ventas_proyectadas.php"><i class="fas fa-chart-line"></i> Ventas Proyectadas</a></li>
+                    <?php endif; ?>
                 </ul>
             </section>
             <?php endif; ?>

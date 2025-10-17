@@ -24,7 +24,8 @@ $paginasDisponibles = [
     'compras.php',
     'facturas.php',
     'precio_venta.php',
-    'costo_producto.php'
+    'costo_producto.php',
+    'ventas_proyectadas.php'
 ];
 $idrolSeleccionado = $_GET['idrol'] ?? $roles[0]['idrol'];
 // Obtener permisos actuales del rol
