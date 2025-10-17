@@ -73,6 +73,7 @@ $errorMsg = isset($_GET['error']) ? htmlspecialchars($_GET['error']) : null;
 </head>
 <body>
   <div class="card-login">
+    <img src="../Solupyme/public/img/logo.png" alt="logo" class="img-fluid mb-3" style="display: block; margin: 0 auto; max-width: 150px;">
     <h2> <?php echo getDatosEmpresa()['nombrecormercial']; ?></h2>
 
     <?php if ($errorMsg): ?>
